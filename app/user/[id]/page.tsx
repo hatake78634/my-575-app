@@ -1,432 +1,952 @@
 'use client'
 
 import Image from 'next/image'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+
 import { supabase } from '../../../lib/supabase'
+import HaikuCard, {
+  Haiku,
+} from '../../components/HaikuCard'
+import BottomNav from '../../components/BottomNav'
+import { useAuth } from '../../hooks/useAuth'
 
 type Profile = {
   id: string
-  username: string
-  bio: string
-  avatar_url: string
-}
-
-type Haiku = {
-  id: string
-  first_line: string
-  second_line: string
-  third_line: string
-  author: string
-  joshi?: string
-  avatar_url?: string
-  user_id?: string
-  created_at: string
+  username: string | null
+  bio: string | null
+  avatar_url: string | null
 }
 
 export default function UserPage() {
   const params = useParams()
-  const userId = params.id as string
   const router = useRouter()
 
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [haikus, setHaikus] = useState<Haiku[]>([])
-  const [likeCounts, setLikeCounts] = useState<{ [key: string]: number }>({})
-  const [userLikes, setUserLikes] = useState<{ [key: string]: boolean }>({})
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const userId = params.id as string
 
-  const [isFollowing, setIsFollowing] = useState(false)
-  const [followerCount, setFollowerCount] = useState(0)
-  const [followingCount, setFollowingCount] = useState(0)
+  const {
+    userId: currentUserId,
+    loading: authLoading,
+  } = useAuth()
 
-  const [activeTab, setActiveTab] = useState('posts')
+  // =============================
+  // プロフィール
+  // =============================
 
-  useEffect(() => {
+  const [profile, setProfile] =
+    useState<Profile | null>(null)
+
+  const [haikus, setHaikus] =
+    useState<Haiku[]>([])
+
+  const [isLoading, setIsLoading] =
+    useState(true)
+
+  // =============================
+  // 贔屓・好読者・歌友
+  // =============================
+
+  const [isFollowing, setIsFollowing] =
+    useState(false)
+
+  const [followingCount, setFollowingCount] =
+    useState(0)
+
+  const [followerCount, setFollowerCount] =
+    useState(0)
+
+  const [mutualCount, setMutualCount] =
+    useState(0)
+
+  // =============================
+  // 雅
+  // =============================
+
+  const [likeCounts, setLikeCounts] = useState<{
+    [key: string]: number
+  }>({})
+
+  const [userLikes, setUserLikes] = useState<{
+    [key: string]: boolean
+  }>({})
+
+  // =============================
+  // データ取得
+  // =============================
+
+  const fetchUserData = async () => {
     if (!userId) {
       return
     }
 
-    let isMounted = true
+    setIsLoading(true)
 
-    const fetchUserData = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!isMounted) return
-        setCurrentUserId(user?.id ?? null)
+    try {
+      // -------------------------
+      // プロフィール
+      // -------------------------
 
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
-          .maybeSingle()
+      const {
+        data: profileData,
+        error: profileError,
+      } = await supabase
+        .from('profiles_3')
+        .select(
+          'id, username, bio, avatar_url'
+        )
+        .eq('id', userId)
+        .maybeSingle()
 
-        if (!isMounted) return
-        if (profileError) {
-          console.error('プロフィール取得エラー:', profileError)
-        }
-        setProfile(profileData || null)
+      if (profileError) {
+        console.error(
+          'プロフィール取得エラー:',
+          profileError
+        )
+      }
 
-        const { data: haikuData, error: haikuError } = await supabase
-          .from('haikus_2')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
+      setProfile(profileData ?? null)
 
-        if (!isMounted) return
-        if (haikuError) {
-          console.error('俳句取得エラー:', haikuError)
-        }
-        const loadedHaikus = haikuData || []
-        setHaikus(loadedHaikus)
+      // -------------------------
+      // この歌人の俳句
+      // -------------------------
 
-        const { count: followersCount, error: followersError } = await supabase
-          .from('follows')
-          .select('*', { count: 'exact', head: true })
-          .eq('following_id', userId)
-
-        const { count: followingsCount, error: followingsError } = await supabase
-          .from('follows')
-          .select('*', { count: 'exact', head: true })
-          .eq('follower_id', userId)
-
-        if (!isMounted) return
-        if (followersError) {
-          console.error('フォロワー数取得エラー:', followersError)
-        }
-        if (followingsError) {
-          console.error('フォロー数取得エラー:', followingsError)
-        }
-        setFollowerCount(followersCount || 0)
-        setFollowingCount(followingsCount || 0)
-
-        if (user?.id && user.id !== userId) {
-          const { data: followData, error: followError } = await supabase
-            .from('follows')
-            .select('*')
-            .eq('follower_id', user.id)
-            .eq('following_id', userId)
-            .maybeSingle()
-
-          if (!isMounted) return
-          if (followError) {
-            console.error('フォロー状態取得エラー:', followError)
-          }
-          setIsFollowing(!!followData)
-        } else {
-          setIsFollowing(false)
-        }
-
-        const { data: likesData, error: likesError } = await supabase.from('likes_2').select('*')
-        if (!isMounted) return
-        if (likesError) {
-          console.error('いいね情報取得エラー:', likesError)
-        }
-
-        const counts: { [key: string]: number } = {}
-        const myLikes: { [key: string]: boolean } = {}
-        const allLikes = Array.isArray(likesData) ? likesData : []
-
-        loadedHaikus.forEach((haiku) => {
-          const haikuLikes = allLikes.filter((l) => String(l.haiku_id) === String(haiku.id))
-          counts[haiku.id] = haikuLikes.length
-          myLikes[haiku.id] = Boolean(user?.id && haikuLikes.some((l) => l.user_id === user.id))
+      const {
+        data: haikuData,
+        error: haikuError,
+      } = await supabase
+        .from('haikus_2')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', {
+          ascending: false,
         })
 
-        setLikeCounts(counts)
-        setUserLikes(myLikes)
-      } catch (err) {
-        console.error('データ取得エラー:', err)
-      } finally {
-        if (isMounted) {
-          setIsLoading(false)
+      if (haikuError) {
+        console.error(
+          '俳句取得エラー:',
+          haikuError
+        )
+      }
+
+      const loadedHaikus =
+        (haikuData ?? []) as Haiku[]
+
+      setHaikus(loadedHaikus)
+
+      // -------------------------
+      // フォロー関係を全部取得
+      //
+      // following:
+      //   この人 → 誰か
+      //
+      // followers:
+      //   誰か → この人
+      // -------------------------
+
+      const {
+        data: followingData,
+        error: followingError,
+      } = await supabase
+        .from('follows')
+        .select('following_id')
+        .eq('follower_id', userId)
+
+      if (followingError) {
+        console.error(
+          '贔屓取得エラー:',
+          followingError
+        )
+      }
+
+      const {
+        data: followerData,
+        error: followerError,
+      } = await supabase
+        .from('follows')
+        .select('follower_id')
+        .eq('following_id', userId)
+
+      if (followerError) {
+        console.error(
+          '好読者取得エラー:',
+          followerError
+        )
+      }
+
+      const followingIds =
+        followingData?.map(
+          (follow) => follow.following_id
+        ) ?? []
+
+      const followerIds =
+        followerData?.map(
+          (follow) => follow.follower_id
+        ) ?? []
+
+      setFollowingCount(
+        followingIds.length
+      )
+
+      setFollowerCount(
+        followerIds.length
+      )
+
+      // -------------------------
+      // 歌友
+      //
+      // 自分も相手を贔屓
+      // ＋
+      // 相手も自分を贔屓
+      // -------------------------
+
+      const mutualIds =
+        followingIds.filter((id) =>
+          followerIds.includes(id)
+        )
+
+      setMutualCount(mutualIds.length)
+
+      // -------------------------
+      // 今ログインしている人が
+      // この歌人を贔屓にしているか
+      // -------------------------
+
+      if (
+        currentUserId &&
+        currentUserId !== userId
+      ) {
+        const {
+          data: followData,
+          error: followError,
+        } = await supabase
+          .from('follows')
+          .select('*')
+          .eq(
+            'follower_id',
+            currentUserId
+          )
+          .eq(
+            'following_id',
+            userId
+          )
+          .maybeSingle()
+
+        if (followError) {
+          console.error(
+            '贔屓状態取得エラー:',
+            followError
+          )
         }
+
+        setIsFollowing(
+          Boolean(followData)
+        )
+      } else {
+        setIsFollowing(false)
+      }
+
+      // -------------------------
+      // 雅
+      // -------------------------
+
+      const {
+        data: likesData,
+        error: likesError,
+      } = await supabase
+        .from('likes_2')
+        .select('*')
+
+      if (likesError) {
+        console.error(
+          '雅取得エラー:',
+          likesError
+        )
+      }
+
+      const allLikes =
+        likesData ?? []
+
+      const counts: {
+        [key: string]: number
+      } = {}
+
+      const myLikes: {
+        [key: string]: boolean
+      } = {}
+
+      loadedHaikus.forEach(
+        (haiku) => {
+          const haikuLikes =
+            allLikes.filter(
+              (like) =>
+                String(
+                  like.haiku_id
+                ) ===
+                String(haiku.id)
+            )
+
+          counts[haiku.id] =
+            haikuLikes.length
+
+          if (currentUserId) {
+            myLikes[haiku.id] =
+              haikuLikes.some(
+                (like) =>
+                  like.user_id ===
+                  currentUserId
+              )
+          }
+        }
+      )
+
+      setLikeCounts(counts)
+      setUserLikes(myLikes)
+    } catch (error) {
+      console.error(
+        '歌人録取得エラー:',
+        error
+      )
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // =============================
+  // 初回取得
+  // =============================
+
+  useEffect(() => {
+    if (authLoading) {
+      return
+    }
+
+    void fetchUserData()
+  }, [
+    userId,
+    currentUserId,
+    authLoading,
+  ])
+
+  // =============================
+  // 贔屓
+  // =============================
+
+  const handleFollowToggle =
+    async () => {
+      if (!currentUserId) {
+        alert(
+          '贔屓に加えるにはログインが必要です！'
+        )
+
+        router.push('/auth')
+        return
+      }
+
+      if (
+        currentUserId === userId
+      ) {
+        return
+      }
+
+      try {
+        if (isFollowing) {
+          // 贔屓から外す
+
+          const { error } =
+            await supabase
+              .from('follows')
+              .delete()
+              .eq(
+                'follower_id',
+                currentUserId
+              )
+              .eq(
+                'following_id',
+                userId
+              )
+
+          if (error) {
+            console.error(
+              '贔屓解除エラー:',
+              error
+            )
+
+            return
+          }
+
+          setIsFollowing(false)
+
+          setFollowerCount(
+            (prev) =>
+              Math.max(
+                prev - 1,
+                0
+              )
+          )
+        } else {
+          // 贔屓に加える
+
+          const { error } =
+            await supabase
+              .from('follows')
+              .insert([
+                {
+                  follower_id:
+                    currentUserId,
+                  following_id:
+                    userId,
+                },
+              ])
+
+          if (error) {
+            console.error(
+              '贔屓追加エラー:',
+              error
+            )
+
+            return
+          }
+
+          setIsFollowing(true)
+
+          setFollowerCount(
+            (prev) => prev + 1
+          )
+        }
+
+        // 歌友数も更新するため再取得
+        await fetchUserData()
+      } catch (error) {
+        console.error(
+          '贔屓処理エラー:',
+          error
+        )
       }
     }
 
-    fetchUserData()
+  // =============================
+  // 雅
+  // =============================
 
-    return () => {
-      isMounted = false
-    }
-  }, [userId])
-
-  const handleFollowToggle = async () => {
+  const handleLike = async (
+    haikuId: string
+  ) => {
     if (!currentUserId) {
-      alert('フォローするにはログインが必要です！')
+      alert(
+        '雅を贈るにはログインが必要です！'
+      )
+
       router.push('/auth')
       return
     }
 
-    if (isFollowing) {
-      await supabase
-        .from('follows')
-        .delete()
-        .eq('follower_id', currentUserId)
-        .eq('following_id', userId)
+    const isAlreadyLiked =
+      userLikes[haikuId] ??
+      false
 
-      setIsFollowing(false)
-      setFollowerCount((prev) => Math.max(0, prev - 1))
-    } else {
-      await supabase
-        .from('follows')
-        .insert([
-          {
-            follower_id: currentUserId,
-            following_id: userId,
-          },
-        ])
+    try {
+      if (isAlreadyLiked) {
+        const { error } =
+          await supabase
+            .from('likes_2')
+            .delete()
+            .eq(
+              'haiku_id',
+              String(haikuId)
+            )
+            .eq(
+              'user_id',
+              currentUserId
+            )
 
-      setIsFollowing(true)
-      setFollowerCount((prev) => prev + 1)
+        if (error) {
+          console.error(
+            '雅取り消しエラー:',
+            error
+          )
+
+          return
+        }
+
+        setUserLikes(
+          (prev) => ({
+            ...prev,
+            [haikuId]: false,
+          })
+        )
+
+        setLikeCounts(
+          (prev) => ({
+            ...prev,
+            [haikuId]:
+              Math.max(
+                (prev[
+                  haikuId
+                ] ?? 1) - 1,
+                0
+              ),
+          })
+        )
+      } else {
+        const { error } =
+          await supabase
+            .from('likes_2')
+            .insert([
+              {
+                haiku_id:
+                  String(
+                    haikuId
+                  ),
+                user_id:
+                  currentUserId,
+              },
+            ])
+
+        if (error) {
+          console.error(
+            '雅エラー:',
+            error
+          )
+
+          return
+        }
+
+        setUserLikes(
+          (prev) => ({
+            ...prev,
+            [haikuId]: true,
+          })
+        )
+
+        setLikeCounts(
+          (prev) => ({
+            ...prev,
+            [haikuId]:
+              (prev[
+                haikuId
+              ] ?? 0) + 1,
+          })
+        )
+      }
+    } catch (error) {
+      console.error(
+        '雅処理エラー:',
+        error
+      )
     }
   }
 
-  const handleLike = async (haikuId: string) => {
-    if (!currentUserId) {
-      alert('いいねするにはログインが必要です！')
-      router.push('/auth')
-      return
-    }
+  // =============================
+  // ローディング
+  // =============================
 
-    const isAlreadyLiked = userLikes[haikuId]
-
-    if (isAlreadyLiked) {
-      await supabase
-        .from('likes_2')
-        .delete()
-        .eq('haiku_id', String(haikuId))
-        .eq('user_id', currentUserId)
-
-      setUserLikes({ ...userLikes, [haikuId]: false })
-      setLikeCounts({ ...likeCounts, [haikuId]: (likeCounts[haikuId] || 1) - 1 })
-    } else {
-      await supabase.from('likes_2').insert([
-        {
-          haiku_id: String(haikuId),
-          user_id: currentUserId,
-        },
-      ])
-
-      setUserLikes({ ...userLikes, [haikuId]: true })
-      setLikeCounts({ ...likeCounts, [haikuId]: (likeCounts[haikuId] || 0) + 1 })
-    }
+  if (
+    isLoading ||
+    authLoading
+  ) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          backgroundColor:
+            '#121212',
+          color: '#777',
+          display: 'flex',
+          justifyContent:
+            'center',
+          alignItems: 'center',
+        }}
+      >
+        歌人録を開いています...
+      </div>
+    )
   }
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return ''
-    const date = new Date(dateString)
-    if (isNaN(date.getTime())) return ''
-    
-    const now = new Date()
-    const diffMin = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-    if (diffMin < 1) return 'たった今'
-    if (diffMin < 60) return `${diffMin}分前`
-    const diffHour = Math.floor(diffMin / 60)
-    if (diffHour < 24) return `${diffHour}時間前`
-
-    const month = date.getMonth() + 1
-    const day = date.getDate()
-    return `${month}月${day}日`
-  }
+  // =============================
+  // 表示
+  // =============================
 
   return (
-    <div style={{ backgroundColor: '#121212', color: '#fff', minHeight: '100vh', paddingBottom: '80px' }}>
-      <main style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
-        
-        <button 
-          onClick={() => router.push('/')} 
-          style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', marginBottom: '20px', fontSize: '0.95rem' }}
+    <div
+      style={{
+        backgroundColor:
+          '#121212',
+        color: '#fff',
+        minHeight: '100vh',
+        paddingBottom: '100px',
+      }}
+    >
+      <main
+        style={{
+          maxWidth: '600px',
+          margin: '0 auto',
+          padding: '20px',
+        }}
+      >
+        {/* 戻る */}
+
+        <button
+          type="button"
+          onClick={() =>
+            router.push('/')
+          }
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#888',
+            cursor: 'pointer',
+            marginBottom: '20px',
+            fontSize: '0.9rem',
+          }}
         >
-          ← トップに戻る
+          ← ホームへ
         </button>
 
-        <div style={{ marginBottom: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '15px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+        {/* =====================
+            プロフィール
+        ===================== */}
+
+        <section
+          style={{
+            marginBottom: '25px',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent:
+                'space-between',
+              alignItems:
+                'flex-start',
+              gap: '15px',
+            }}
+          >
+            {/* 左 */}
+
+            <div
+              style={{
+                display: 'flex',
+                gap: '15px',
+                alignItems:
+                  'center',
+              }}
+            >
+              {/* アイコン */}
+
               {profile?.avatar_url ? (
                 <Image
-                  src={profile.avatar_url}
-                  alt="avatar"
+                  src={
+                    profile.avatar_url
+                  }
+                  alt={`${
+                    profile.username ??
+                    '歌人'
+                  }のアイコン`}
                   width={80}
                   height={80}
-                  style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #333' }}
+                  style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius:
+                      '50%',
+                    objectFit:
+                      'cover',
+                    border:
+                      '2px solid #333',
+                  }}
                   unoptimized
                 />
               ) : (
-                <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#444' }} />
+                <div
+                  style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius:
+                      '50%',
+                    backgroundColor:
+                      '#444',
+                  }}
+                />
               )}
+
               <div>
-                <h1 style={{ fontSize: '1.3rem', fontWeight: 'bold', margin: 0, color: '#fff' }}>
-                  {profile?.username || (isLoading ? '読み込み中...' : '名無し')}
+                <h1
+                  style={{
+                    fontSize:
+                      '1.35rem',
+                    margin: 0,
+                    marginBottom:
+                      '5px',
+                  }}
+                >
+                  {profile?.username ??
+                    '名無し'}
                 </h1>
-                <span style={{ fontSize: '0.75rem', color: '#888' }}>ID: {userId ? userId.slice(0, 8) : ''}</span>
+
+                <div
+                  style={{
+                    fontSize:
+                      '0.72rem',
+                    color: '#777',
+                  }}
+                >
+                  ID:{' '}
+                  {userId.slice(
+                    0,
+                    8
+                  )}
+                </div>
               </div>
             </div>
 
-            {currentUserId === userId ? (
+            {/* 右 */}
+
+            {currentUserId ===
+            userId ? (
               <button
-                onClick={() => router.push('/profile')}
-                style={{
-                  backgroundColor: 'transparent',
-                  border: '1px solid #444',
-                  color: '#fff',
-                  padding: '6px 14px',
-                  borderRadius: '20px',
-                  fontSize: '0.85rem',
-                  cursor: 'pointer',
-                  fontWeight: 'bold'
-                }}
+                type="button"
+                onClick={() =>
+                  router.push(
+                    '/profile'
+                  )
+                }
+                style={secondaryButton}
               >
                 情報編集
               </button>
             ) : currentUserId ? (
               <button
-                onClick={handleFollowToggle}
+                type="button"
+                onClick={
+                  handleFollowToggle
+                }
                 style={{
-                  backgroundColor: isFollowing ? 'transparent' : '#ffda79',
-                  border: isFollowing ? '1px solid #444' : 'none',
-                  color: isFollowing ? '#fff' : '#121212',
-                  padding: '6px 16px',
-                  borderRadius: '20px',
-                  fontSize: '0.85rem',
-                  cursor: 'pointer',
-                  fontWeight: 'bold'
+                  ...secondaryButton,
+
+                  backgroundColor:
+                    isFollowing
+                      ? 'transparent'
+                      : '#ffda79',
+
+                  color:
+                    isFollowing
+                      ? '#fff'
+                      : '#121212',
+
+                  border:
+                    isFollowing
+                      ? '1px solid #444'
+                      : 'none',
                 }}
               >
-                {isFollowing ? 'フォロー中' : 'フォローする'}
+                {isFollowing
+                  ? '贔屓中'
+                  : '贔屓に加える'}
               </button>
             ) : null}
           </div>
 
-          <p style={{ color: '#ccc', fontSize: '0.9rem', lineHeight: '1.5', whiteSpace: 'pre-wrap', marginBottom: '15px' }}>
-            {profile?.bio || '自己紹介はまだありません。'}
-          </p>
+          {/* 自己紹介 */}
 
-          <div style={{ display: 'flex', gap: '20px', fontSize: '0.9rem', color: '#aaa', borderBottom: '1px solid #2a2a2a', paddingBottom: '20px' }}>
-            <div><strong style={{ color: '#fff' }}>{haikus.length}</strong> 句の詠草</div>
-            <div><strong style={{ color: '#fff' }}>{followingCount}</strong> フォロー</div>
-            <div><strong style={{ color: '#fff' }}>{followerCount}</strong> フォロワー</div>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: '25px', borderBottom: '1px solid #2a2a2a', marginBottom: '20px', fontSize: '0.95rem' }}>
-          <div 
-            onClick={() => setActiveTab('posts')}
-            style={{ 
-              paddingBottom: '10px', 
-              cursor: 'pointer', 
-              color: activeTab === 'posts' ? '#fff' : '#777', 
-              borderBottom: activeTab === 'posts' ? '2px solid #ffda79' : 'none',
-              fontWeight: activeTab === 'posts' ? 'bold' : 'normal'
+          <p
+            style={{
+              color: '#ccc',
+              fontSize: '0.9rem',
+              lineHeight: '1.7',
+              whiteSpace:
+                'pre-wrap',
+              marginTop: '20px',
+              marginBottom:
+                '20px',
             }}
           >
-            全ての投稿
+            {profile?.bio ||
+              '自己紹介はまだありません。'}
+          </p>
+
+          {/* =====================
+              実績・関係
+          ===================== */}
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns:
+                'repeat(4, 1fr)',
+              gap: '5px',
+              borderTop:
+                '1px solid #2a2a2a',
+              borderBottom:
+                '1px solid #2a2a2a',
+              padding:
+                '16px 0',
+            }}
+          >
+            <StatItem
+              number={
+                haikus.length
+              }
+              label="詠句"
+            />
+
+            <StatItem
+              number={
+                followingCount
+              }
+              label="贔屓"
+            />
+
+            <StatItem
+              number={
+                followerCount
+              }
+              label="好読者"
+            />
+
+            <StatItem
+              number={
+                mutualCount
+              }
+              label="歌友"
+            />
+          </div>
+        </section>
+
+        {/* =====================
+            投稿一覧
+        ===================== */}
+
+        <div
+          style={{
+            borderBottom:
+              '1px solid #2a2a2a',
+            marginBottom: '20px',
+          }}
+        >
+          <div
+            style={{
+              display:
+                'inline-block',
+              padding:
+                '0 3px 10px',
+              borderBottom:
+                '2px solid #ffda79',
+              fontSize:
+                '0.95rem',
+              fontWeight: 'bold',
+            }}
+          >
+            詠んだ句
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          {isLoading ? (
-            <p style={{ textAlign: 'center', color: '#777', marginTop: '40px' }}>読み込み中...</p>
-          ) : haikus.length === 0 ? (
-            <p style={{ textAlign: 'center', color: '#777', marginTop: '40px' }}>まだ投稿はありません。</p>
-          ) : (
-            haikus.map((haiku) => {
-              const isLiked = userLikes[haiku.id] || false
-              const count = likeCounts[haiku.id] || 0
+        {/* 俳句 */}
 
-              return (
-                <div 
-                  key={haiku.id} 
-                  style={{ 
-                    backgroundColor: '#1e1e1e', 
-                    borderRadius: '16px', 
-                    padding: '20px', 
-                    border: '1px solid #2a2a2a',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      {profile?.avatar_url && (
-                        <Image
-                          src={profile.avatar_url}
-                          alt="avatar"
-                          width={28}
-                          height={28}
-                          style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }}
-                          unoptimized
-                        />
-                      )}
-                      <span style={{ fontSize: '0.85rem', color: '#ccc', fontWeight: 'bold' }}>
-                        {profile?.username || '名無し'}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: '#888' }}>
-                      {formatDate(haiku.created_at)}
-                    </div>
-                  </div>
-
-                  <div 
-                    onClick={() => router.push(`/haiku/${haiku.id}`)}
-                    style={{ 
-                      cursor: 'pointer',
-                      marginBottom: '20px',
-                      color: '#f0f0f0',
-                      textAlign: 'center'
-                    }}
-                  >
-                    {haiku.joshi && (
-                      <div style={{ fontSize: '0.9rem', color: '#b0a892', marginBottom: '10px', fontStyle: 'italic' }}>
-                        {haiku.joshi}
-                      </div>
-                    )}
-                    <div style={{ display: 'inline-block', textAlign: 'left' }}>
-                      <div style={{ fontSize: '1.2rem', fontWeight: 'bold', lineHeight: '1.8', letterSpacing: '2px', marginLeft: '0px' }}>{haiku.first_line}</div>
-                      <div style={{ fontSize: '1.2rem', fontWeight: 'bold', lineHeight: '1.8', letterSpacing: '2px', marginLeft: '30px' }}>{haiku.second_line}</div>
-                      <div style={{ fontSize: '1.2rem', fontWeight: 'bold', lineHeight: '1.8', letterSpacing: '2px', marginLeft: '60px' }}>{haiku.third_line}</div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px', borderTop: '1px solid #2a2a2a', paddingTop: '12px' }}>
-                    <button
-                      onClick={() => handleLike(haiku.id)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: isLiked ? '#ff4757' : '#aaa',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        fontSize: '0.95rem'
-                      }}
-                    >
-                      <span style={{ fontSize: '1.1rem' }}>{isLiked ? '❤️' : '🤍'}</span> <span>{count}</span>
-                    </button>
-
-                    <button
-                      onClick={() => router.push(`/haiku/${haiku.id}`)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: '#aaa',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        fontSize: '0.95rem'
-                      }}
-                    >
-                      💬 詳細・返歌
-                    </button>
-                  </div>
-                </div>
+        {haikus.length === 0 ? (
+          <div
+            style={{
+              textAlign: 'center',
+              color: '#777',
+              padding:
+                '50px 20px',
+            }}
+          >
+            まだ句は詠まれていません。
+          </div>
+        ) : (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection:
+                'column',
+              gap: '15px',
+            }}
+          >
+            {haikus.map(
+              (haiku) => (
+                <HaikuCard
+                  key={haiku.id}
+                  haiku={haiku}
+                  isLiked={
+                    userLikes[
+                      haiku.id
+                    ] ?? false
+                  }
+                  likeCount={
+                    likeCounts[
+                      haiku.id
+                    ] ?? 0
+                  }
+                  onLike={
+                    handleLike
+                  }
+                />
               )
-            })
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </main>
+
+      <BottomNav
+        currentUserId={
+          currentUserId
+        }
+      />
     </div>
   )
+}
+
+// =============================
+// 小さい表示部品
+// =============================
+
+type StatItemProps = {
+  number: number
+  label: string
+}
+
+function StatItem({
+  number,
+  label,
+}: StatItemProps) {
+  return (
+    <div
+      style={{
+        textAlign: 'center',
+      }}
+    >
+      <div
+        style={{
+          fontWeight: 'bold',
+          fontSize: '1rem',
+          color: '#fff',
+        }}
+      >
+        {number}
+      </div>
+
+      <div
+        style={{
+          color: '#888',
+          fontSize: '0.72rem',
+          marginTop: '3px',
+        }}
+      >
+        {label}
+      </div>
+    </div>
+  )
+}
+
+const secondaryButton = {
+  backgroundColor:
+    'transparent',
+  border:
+    '1px solid #444',
+  color: '#fff',
+  padding: '7px 14px',
+  borderRadius: '20px',
+  fontSize: '0.82rem',
+  cursor: 'pointer',
+  fontWeight: 'bold',
 }
