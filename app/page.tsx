@@ -1,11 +1,18 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
+
 import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 
 import Header from './components/Header'
-import HaikuCard, { Haiku } from './components/HaikuCard'
+import HaikuCard, {
+  Haiku,
+} from './components/HaikuCard'
 import PostModal from './components/PostModal'
 import BottomNav from './components/BottomNav'
 import TimelineTabs, {
@@ -13,6 +20,53 @@ import TimelineTabs, {
 } from './components/TimelineTabs'
 
 import { useAuth } from './hooks/useAuth'
+
+// =============================
+// 型
+// =============================
+
+type LikeRow = {
+  haiku_id: string
+  user_id: string
+  created_at?: string | null
+}
+
+type ProfileCreatedAt = {
+  id: string
+  created_at: string | null
+}
+
+type ScoredHaiku = {
+  haiku: Haiku
+  score: number
+  totalLikes: number
+  recent3: number
+  previous3: number
+  recent6: number
+  recent24: number
+  acceleration: number
+  ageHours: number
+  isNewUser: boolean
+  isNewPost: boolean
+}
+
+// =============================
+// みつける設定
+// =============================
+
+const NEW_USER_DAYS = 14
+
+const NEW_USER_POST_HOURS = 48
+
+const DISCOVER_REFRESH_MINUTES = 30
+
+// =============================
+// 勝負句設定
+// =============================
+
+const MAX_COMPETITIVE_PER_DAY = 3
+
+const COMPETITIVE_HOURS = 48
 
 export default function Home() {
   const router = useRouter()
@@ -32,675 +86,2340 @@ export default function Home() {
   // タイムライン
   // =============================
 
-  const [activeTab, setActiveTab] =
-    useState<TimelineTab>('new')
+  const [
+    activeTab,
+    setActiveTab,
+  ] = useState<TimelineTab>('new')
 
   // =============================
   // 俳句
   // =============================
 
-  const [haikus, setHaikus] = useState<Haiku[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [
+    haikus,
+    setHaikus,
+  ] = useState<Haiku[]>([])
+
+  const [
+    isLoading,
+    setIsLoading,
+  ] = useState(true)
+
+  // =============================
+  // 歌人情報
+  // =============================
+
+  const [
+    profileCreatedAt,
+    setProfileCreatedAt,
+  ] = useState<ProfileCreatedAt[]>([])
+
+  const [
+    currentRating,
+    setCurrentRating,
+  ] = useState(1000)
+
+  // =============================
+  // 勝負句
+  // =============================
+
+  const [
+    competitiveRemaining,
+    setCompetitiveRemaining,
+  ] = useState(
+    MAX_COMPETITIVE_PER_DAY
+  )
+
+  // =============================
+  // 贔屓
+  // =============================
+
+  const [
+    favoriteUserIds,
+    setFavoriteUserIds,
+  ] = useState<string[]>([])
+
+  const [
+    favoriteLoading,
+    setFavoriteLoading,
+  ] = useState(false)
+
+  const [
+    favoriteLoaded,
+    setFavoriteLoaded,
+  ] = useState(false)
 
   // =============================
   // 雅
   // =============================
 
-  const [likeCounts, setLikeCounts] = useState<{
+  const [
+    likeRows,
+    setLikeRows,
+  ] = useState<LikeRow[]>([])
+
+  const [
+    likeCounts,
+    setLikeCounts,
+  ] = useState<{
     [key: string]: number
   }>({})
 
-  const [userLikes, setUserLikes] = useState<{
+  const [
+    userLikes,
+    setUserLikes,
+  ] = useState<{
     [key: string]: boolean
   }>({})
 
   // =============================
-  // 投稿モーダル
+  // 投稿
   // =============================
 
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [
+    isModalOpen,
+    setIsModalOpen,
+  ] = useState(false)
 
   // =============================
-  // 俳句・雅を読み込む
+  // 30分固定推薦
   // =============================
 
-const loadHaikus = async () => {
-  setIsLoading(true)
-
-  try {
-    // =============================
-    // ① 俳句を取得
-    // =============================
-
-    const {
-      data: haikuData,
-      error: haikuError,
-    } = await supabase
-      .from('haikus_2')
-      .select('*')
-      .order('created_at', {
-        ascending: false,
-      })
-
-    if (haikuError) {
-      console.error(
-        '俳句取得エラー:',
-        haikuError
-      )
-
-      setHaikus([])
-      return
-    }
-
-    const loadedHaikus =
-      (haikuData ?? []) as Haiku[]
-
-    // =============================
-    // ② 句と札の紐付けを取得
-    // =============================
-
-    const {
-      data: haikuTagData,
-      error: haikuTagError,
-    } = await supabase
-      .from('haiku_tags')
-      .select('haiku_id, tag_id')
-
-    if (haikuTagError) {
-      console.error(
-        '札紐付け取得エラー:',
-        haikuTagError
-      )
-    }
-
-    const tagLinks =
-      haikuTagData ?? []
-
-    // =============================
-    // ③ 必要な札IDを集める
-    // =============================
-
-    const tagIds = [
-      ...new Set(
-        tagLinks.map(
-          (link) => link.tag_id
+  const discoverTimeBucket =
+    Math.floor(
+      Date.now() /
+        (
+          DISCOVER_REFRESH_MINUTES *
+          60 *
+          1000
         )
-      ),
-    ]
+    )
 
-    // =============================
-    // ④ 札の名前を取得
-    // =============================
+  // =============================
+  // 疑似乱数
+  // =============================
 
-    let tagData: {
-      id: number
-      name: string
-    }[] = []
+  const pseudoRandom = (
+    value: string
+  ) => {
+    let hash = 0
 
-    if (tagIds.length > 0) {
-      const {
-        data,
-        error: tagError,
-      } = await supabase
-        .from('tags')
-        .select('id, name')
-        .in('id', tagIds)
+    for (
+      let i = 0;
+      i < value.length;
+      i++
+    ) {
+      hash =
+        (
+          hash * 31 +
+          value.charCodeAt(i)
+        ) >>> 0
+    }
 
-      if (tagError) {
+    return (
+      (hash % 10000) /
+      10000
+    )
+  }
+
+  // =============================
+  // rating → 勝負句ボーダー
+  // =============================
+
+  const getBattleBorder = (
+    rating: number
+  ) => {
+    // 初花
+    if (rating < 1100) {
+      return 1
+    }
+
+    // 若葉
+    if (rating < 1250) {
+      return 2
+    }
+
+    // 詠士
+    if (rating < 1450) {
+      return 3
+    }
+
+    // 詠匠
+    if (rating < 1700) {
+      return 4
+    }
+
+    // 歌豪
+    if (rating < 2000) {
+      return 6
+    }
+
+    // 歌聖・歌仙
+    return 8
+  }
+
+  // =============================
+  // 日本時間の今日
+  // =============================
+
+  const getTodayJstRange = () => {
+    const now =
+      new Date()
+
+    const jstNow =
+      new Date(
+        now.getTime() +
+          9 *
+            60 *
+            60 *
+            1000
+      )
+
+    const year =
+      jstNow.getUTCFullYear()
+
+    const month =
+      jstNow.getUTCMonth()
+
+    const day =
+      jstNow.getUTCDate()
+
+    const startMs =
+      Date.UTC(
+        year,
+        month,
+        day,
+        0,
+        0,
+        0
+      ) -
+      9 *
+        60 *
+        60 *
+        1000
+
+    const endMs =
+      startMs +
+      24 *
+        60 *
+        60 *
+        1000
+
+    return {
+      start:
+        new Date(
+          startMs
+        ).toISOString(),
+
+      end:
+        new Date(
+          endMs
+        ).toISOString(),
+    }
+  }
+
+  // =============================
+  // rating・今日の勝負句数
+  // =============================
+
+  const loadCompetitiveStatus =
+    async () => {
+      if (!userId) {
+        setCurrentRating(
+          1000
+        )
+
+        setCompetitiveRemaining(
+          MAX_COMPETITIVE_PER_DAY
+        )
+
+        return
+      }
+
+      try {
+        // rating
+
+        const {
+          data: profile,
+          error:
+            profileError,
+        } = await supabase
+          .from('profiles_3')
+          .select('rating')
+          .eq(
+            'id',
+            userId
+          )
+          .maybeSingle()
+
+        if (
+          profileError
+        ) {
+          console.error(
+            'rating取得エラー:',
+            profileError
+          )
+        }
+
+        const rating =
+          typeof profile?.rating ===
+          'number'
+            ? profile.rating
+            : 1000
+
+        setCurrentRating(
+          rating
+        )
+
+        // 今日の勝負句数
+
+        const {
+          start,
+          end,
+        } = getTodayJstRange()
+
+        const {
+          data:
+            todayCompetitive,
+          error:
+            competitiveError,
+        } = await supabase
+          .from('haikus_2')
+          .select('id')
+          .eq(
+            'user_id',
+            userId
+          )
+          .eq(
+            'is_competitive',
+            true
+          )
+          .gte(
+            'battle_started_at',
+            start
+          )
+          .lt(
+            'battle_started_at',
+            end
+          )
+
+        if (
+          competitiveError
+        ) {
+          console.error(
+            '勝負句数取得エラー:',
+            competitiveError
+          )
+
+          return
+        }
+
+        const used =
+          todayCompetitive?.length ??
+          0
+
+        setCompetitiveRemaining(
+          Math.max(
+            MAX_COMPETITIVE_PER_DAY -
+              used,
+            0
+          )
+        )
+      } catch (error) {
         console.error(
-          '札取得エラー:',
-          tagError
+          '勝負句状態取得エラー:',
+          error
+        )
+      }
+    }
+
+  // =============================
+  // 俳句・札・雅・プロフィール
+  // =============================
+
+  const loadHaikus = async () => {
+    setIsLoading(true)
+
+    try {
+      // -------------------------
+      // ① 俳句
+      // -------------------------
+
+      const {
+        data: haikuData,
+        error: haikuError,
+      } = await supabase
+        .from('haikus_2')
+        .select('*')
+        .order(
+          'created_at',
+          {
+            ascending:
+              false,
+          }
+        )
+
+      if (
+        haikuError
+      ) {
+        console.error(
+          '俳句取得エラー:',
+          haikuError
+        )
+
+        setHaikus([])
+        return
+      }
+
+      const loadedHaikus =
+        (haikuData ??
+          []) as Haiku[]
+
+      // -------------------------
+      // ② 札との紐付け
+      // -------------------------
+
+      const {
+        data: haikuTagData,
+        error:
+          haikuTagError,
+      } = await supabase
+        .from('haiku_tags')
+        .select(
+          'haiku_id, tag_id'
+        )
+
+      if (
+        haikuTagError
+      ) {
+        console.error(
+          '札紐付け取得エラー:',
+          haikuTagError
         )
       }
 
-      tagData =
-        (data ?? []) as {
-          id: number
-          name: string
-        }[]
-    }
+      const tagLinks =
+        haikuTagData ??
+        []
 
-    // =============================
-    // ⑤ 俳句に札を追加
-    // =============================
+      const tagIds = [
+        ...new Set(
+          tagLinks.map(
+            (link) =>
+              link.tag_id
+          )
+        ),
+      ]
 
-    const haikusWithTags: Haiku[] =
-      loadedHaikus.map(
-        (haiku) => {
-          const links =
-            tagLinks.filter(
-              (link) =>
-                String(
-                  link.haiku_id
-                ) ===
-                String(haiku.id)
-            )
+      let tagData: {
+        id: number
+        name: string
+      }[] = []
 
-          const tags =
-            links
-              .map((link) => {
-                const tag =
-                  tagData.find(
-                    (item) =>
-                      item.id ===
-                      link.tag_id
+      if (
+        tagIds.length > 0
+      ) {
+        const {
+          data,
+          error:
+            tagError,
+        } = await supabase
+          .from('tags')
+          .select(
+            'id, name'
+          )
+          .in(
+            'id',
+            tagIds
+          )
+
+        if (
+          tagError
+        ) {
+          console.error(
+            '札取得エラー:',
+            tagError
+          )
+        }
+
+        tagData =
+          (data ??
+            []) as {
+            id: number
+            name: string
+          }[]
+      }
+
+      // -------------------------
+      // ③ 句に札を付与
+      // -------------------------
+
+      const haikusWithTags:
+        Haiku[] =
+        loadedHaikus.map(
+          (haiku) => {
+            const links =
+              tagLinks.filter(
+                (link) =>
+                  String(
+                    link.haiku_id
+                  ) ===
+                  String(
+                    haiku.id
                   )
-
-                return tag?.name
-              })
-              .filter(
-                (
-                  name
-                ): name is string =>
-                  Boolean(name)
               )
 
-          return {
-            ...haiku,
-            tags,
+            const tags =
+              links
+                .map(
+                  (link) => {
+                    const tag =
+                      tagData.find(
+                        (item) =>
+                          item.id ===
+                          link.tag_id
+                      )
+
+                    return tag?.name
+                  }
+                )
+                .filter(
+                  (
+                    name
+                  ): name is string =>
+                    Boolean(
+                      name
+                    )
+                )
+
+            return {
+              ...haiku,
+              tags,
+            }
+          }
+        )
+
+      setHaikus(
+        haikusWithTags
+      )
+
+      // -------------------------
+      // ④ 雅
+      // -------------------------
+
+      const {
+        data: likesData,
+        error:
+          likesError,
+      } = await supabase
+        .from('likes_2')
+        .select(
+          'haiku_id, user_id, created_at'
+        )
+
+      if (
+        likesError
+      ) {
+        console.error(
+          '雅取得エラー:',
+          likesError
+        )
+      }
+
+      const likes =
+        (likesData ??
+          []) as LikeRow[]
+
+      setLikeRows(
+        likes
+      )
+
+      const counts: {
+        [key: string]:
+          number
+      } = {}
+
+      const myLikes: {
+        [key: string]:
+          boolean
+      } = {}
+
+      haikusWithTags.forEach(
+        (haiku) => {
+          const haikuLikes =
+            likes.filter(
+              (like) =>
+                String(
+                  like.haiku_id
+                ) ===
+                String(
+                  haiku.id
+                )
+            )
+
+          counts[
+            haiku.id
+          ] =
+            haikuLikes.length
+
+          if (
+            userId
+          ) {
+            myLikes[
+              haiku.id
+            ] =
+              haikuLikes.some(
+                (like) =>
+                  like.user_id ===
+                  userId
+              )
           }
         }
       )
 
-    setHaikus(haikusWithTags)
+      setLikeCounts(
+        counts
+      )
 
-    // =============================
-    // ⑥ 雅を取得
-    // =============================
+      setUserLikes(
+        myLikes
+      )
 
-    const {
-      data: likesData,
-      error: likesError,
-    } = await supabase
-      .from('likes_2')
-      .select('*')
+      // -------------------------
+      // ⑤ 歌人登録日時
+      // -------------------------
 
-    if (likesError) {
+      const {
+        data:
+          profileData,
+        error:
+          profileError,
+      } = await supabase
+        .from('profiles_3')
+        .select(
+          'id, created_at'
+        )
+
+      if (
+        profileError
+      ) {
+        console.error(
+          '歌人登録日時取得エラー:',
+          profileError
+        )
+      }
+
+      setProfileCreatedAt(
+        (profileData ??
+          []) as ProfileCreatedAt[]
+      )
+    } catch (error) {
       console.error(
-        '雅取得エラー:',
-        likesError
+        'データ取得エラー:',
+        error
+      )
+    } finally {
+      setIsLoading(
+        false
       )
     }
-
-    const counts: {
-      [key: string]: number
-    } = {}
-
-    const myLikes: {
-      [key: string]: boolean
-    } = {}
-
-    haikusWithTags.forEach(
-      (haiku) => {
-        const haikuLikes =
-          likesData?.filter(
-            (like) =>
-              String(
-                like.haiku_id
-              ) ===
-              String(haiku.id)
-          ) ?? []
-
-        counts[haiku.id] =
-          haikuLikes.length
-
-        if (userId) {
-          myLikes[haiku.id] =
-            haikuLikes.some(
-              (like) =>
-                like.user_id ===
-                userId
-            )
-        }
-      }
-    )
-
-    setLikeCounts(counts)
-    setUserLikes(myLikes)
-  } catch (error) {
-    console.error(
-      'データ取得エラー:',
-      error
-    )
-  } finally {
-    setIsLoading(false)
   }
-}
+
+  // =============================
+  // 贔屓
+  // =============================
+
+  const loadFavoriteUsers =
+    async () => {
+      if (
+        !userId
+      ) {
+        setFavoriteUserIds(
+          []
+        )
+
+        setFavoriteLoaded(
+          true
+        )
+
+        return
+      }
+
+      setFavoriteLoading(
+        true
+      )
+
+      try {
+        const {
+          data,
+          error,
+        } = await supabase
+          .from('follows')
+          .select(
+            'following_id'
+          )
+          .eq(
+            'follower_id',
+            userId
+          )
+
+        if (
+          error
+        ) {
+          console.error(
+            '贔屓取得エラー:',
+            error
+          )
+
+          setFavoriteUserIds(
+            []
+          )
+
+          return
+        }
+
+        const ids = [
+          ...new Set(
+            (
+              data ??
+              []
+            ).map(
+              (follow) =>
+                String(
+                  follow.following_id
+                )
+            )
+          ),
+        ]
+
+        setFavoriteUserIds(
+          ids
+        )
+      } catch (error) {
+        console.error(
+          '贔屓取得処理エラー:',
+          error
+        )
+
+        setFavoriteUserIds(
+          []
+        )
+      } finally {
+        setFavoriteLoading(
+          false
+        )
+
+        setFavoriteLoaded(
+          true
+        )
+      }
+    }
 
   // =============================
   // 初回読み込み
   // =============================
 
   useEffect(() => {
-    if (authLoading) {
+    if (
+      authLoading
+    ) {
       return
     }
 
     void loadHaikus()
-  }, [authLoading, userId])
+
+    void loadCompetitiveStatus()
+
+    if (
+      userId
+    ) {
+      void loadFavoriteUsers()
+    } else {
+      setFavoriteUserIds(
+        []
+      )
+
+      setFavoriteLoaded(
+        true
+      )
+    }
+  }, [
+    authLoading,
+    userId,
+  ])
+
+  // =============================
+  // 贔屓タブ
+  // =============================
+
+  useEffect(() => {
+    if (
+      activeTab !==
+      'favorite'
+    ) {
+      return
+    }
+
+    if (
+      !userId
+    ) {
+      return
+    }
+
+    void loadFavoriteUsers()
+  }, [
+    activeTab,
+    userId,
+  ])
+
+  // =============================
+  // みつける用スコア
+  // =============================
+
+  const scoredHaikus =
+    useMemo(() => {
+      const now =
+        Date.now()
+
+      return haikus.map(
+        (
+          haiku
+        ): ScoredHaiku => {
+          const haikuLikes =
+            likeRows.filter(
+              (like) =>
+                String(
+                  like.haiku_id
+                ) ===
+                String(
+                  haiku.id
+                )
+            )
+
+          const createdTime =
+            haiku.created_at
+              ? new Date(
+                  haiku.created_at
+                ).getTime()
+              : now
+
+          const ageHours =
+            Math.max(
+              0,
+              (
+                now -
+                createdTime
+              ) /
+                (
+                  1000 *
+                  60 *
+                  60
+                )
+            )
+
+          let recent3 = 0
+          let previous3 = 0
+          let recent6 = 0
+          let recent24 = 0
+
+          haikuLikes.forEach(
+            (like) => {
+              if (
+                !like.created_at
+              ) {
+                return
+              }
+
+              const likeTime =
+                new Date(
+                  like.created_at
+                ).getTime()
+
+              const hoursAgo =
+                (
+                  now -
+                  likeTime
+                ) /
+                (
+                  1000 *
+                  60 *
+                  60
+                )
+
+              if (
+                hoursAgo >=
+                  0 &&
+                hoursAgo <=
+                  3
+              ) {
+                recent3++
+              }
+
+              if (
+                hoursAgo >
+                  3 &&
+                hoursAgo <=
+                  6
+              ) {
+                previous3++
+              }
+
+              if (
+                hoursAgo >=
+                  0 &&
+                hoursAgo <=
+                  6
+              ) {
+                recent6++
+              }
+
+              if (
+                hoursAgo >=
+                  0 &&
+                hoursAgo <=
+                  24
+              ) {
+                recent24++
+              }
+            }
+          )
+
+          const acceleration =
+            recent3 -
+            previous3
+
+          const freshness =
+            Math.max(
+              0,
+              24 -
+                ageHours
+            ) *
+            0.15
+
+          let discoveryBonus =
+            0
+
+          if (
+            haikuLikes.length ===
+            0
+          ) {
+            discoveryBonus =
+              3
+          } else if (
+            haikuLikes.length <=
+            2
+          ) {
+            discoveryBonus =
+              1.5
+          }
+
+          const profile =
+            profileCreatedAt.find(
+              (item) =>
+                String(
+                  item.id
+                ) ===
+                String(
+                  haiku.user_id
+                )
+            )
+
+          let isNewUser =
+            false
+
+          if (
+            profile?.created_at
+          ) {
+            const profileTime =
+              new Date(
+                profile.created_at
+              ).getTime()
+
+            const accountAgeDays =
+              (
+                now -
+                profileTime
+              ) /
+              (
+                1000 *
+                60 *
+                60 *
+                24
+              )
+
+            isNewUser =
+              accountAgeDays >=
+                0 &&
+              accountAgeDays <=
+                NEW_USER_DAYS
+          }
+
+          const isNewPost =
+            ageHours <=
+            NEW_USER_POST_HOURS
+
+          const ownPostPenalty =
+            userId &&
+            String(
+              haiku.user_id
+            ) ===
+              String(
+                userId
+              )
+              ? 2
+              : 0
+
+          const randomBonus =
+            pseudoRandom(
+              `${discoverTimeBucket}-${haiku.id}`
+            ) *
+            3
+
+          const score =
+            haikuLikes.length +
+            recent6 *
+              3 +
+            recent24 +
+            acceleration *
+              4 +
+            freshness +
+            discoveryBonus +
+            randomBonus -
+            ownPostPenalty
+
+          return {
+            haiku,
+            score,
+            totalLikes:
+              haikuLikes.length,
+            recent3,
+            previous3,
+            recent6,
+            recent24,
+            acceleration,
+            ageHours,
+            isNewUser,
+            isNewPost,
+          }
+        }
+      )
+    }, [
+      haikus,
+      likeRows,
+      profileCreatedAt,
+      userId,
+      discoverTimeBucket,
+    ])
+
+  // =============================
+  // みつける 60/20/10/10
+  // =============================
+
+  const discoverHaikus =
+    useMemo(() => {
+      if (
+        scoredHaikus.length ===
+        0
+      ) {
+        return []
+      }
+
+      const targetCount =
+        scoredHaikus.length
+
+      let trendCount =
+        Math.floor(
+          targetCount *
+            0.6
+        )
+
+      let discoveryCount =
+        Math.floor(
+          targetCount *
+            0.2
+        )
+
+      let newcomerCount =
+        Math.floor(
+          targetCount *
+            0.1
+        )
+
+      let randomCount =
+        targetCount -
+        trendCount -
+        discoveryCount -
+        newcomerCount
+
+      if (
+        targetCount >=
+        4
+      ) {
+        discoveryCount =
+          Math.max(
+            discoveryCount,
+            1
+          )
+
+        newcomerCount =
+          Math.max(
+            newcomerCount,
+            1
+          )
+
+        randomCount =
+          Math.max(
+            randomCount,
+            1
+          )
+
+        trendCount =
+          Math.max(
+            targetCount -
+              discoveryCount -
+              newcomerCount -
+              randomCount,
+            1
+          )
+      }
+
+      const selected:
+        ScoredHaiku[] = []
+
+      const selectedIds =
+        new Set<string>()
+
+      const addCandidate = (
+        item: ScoredHaiku
+      ) => {
+        const id =
+          String(
+            item.haiku.id
+          )
+
+        if (
+          selectedIds.has(
+            id
+          )
+        ) {
+          return false
+        }
+
+        selectedIds.add(
+          id
+        )
+
+        selected.push(
+          item
+        )
+
+        return true
+      }
+
+      // -------------------------
+      // 勢い枠
+      // -------------------------
+
+      const trendPool = [
+        ...scoredHaikus,
+      ].sort(
+        (a, b) =>
+          b.score -
+          a.score
+      )
+
+      let added =
+        0
+
+      for (
+        const item
+        of trendPool
+      ) {
+        if (
+          added >=
+          trendCount
+        ) {
+          break
+        }
+
+        if (
+          addCandidate(
+            item
+          )
+        ) {
+          added++
+        }
+      }
+
+      // -------------------------
+      // 発掘枠
+      // -------------------------
+
+      const discoveryPool =
+        scoredHaikus
+          .filter(
+            (item) =>
+              item.totalLikes <=
+              2
+          )
+          .sort(
+            (a, b) => {
+              const aRandom =
+                pseudoRandom(
+                  `${discoverTimeBucket}-discovery-${a.haiku.id}`
+                )
+
+              const bRandom =
+                pseudoRandom(
+                  `${discoverTimeBucket}-discovery-${b.haiku.id}`
+                )
+
+              return (
+                bRandom -
+                aRandom
+              )
+            }
+          )
+
+      added =
+        0
+
+      for (
+        const item
+        of discoveryPool
+      ) {
+        if (
+          added >=
+          discoveryCount
+        ) {
+          break
+        }
+
+        if (
+          addCandidate(
+            item
+          )
+        ) {
+          added++
+        }
+      }
+
+      // -------------------------
+      // 新人枠
+      // -------------------------
+
+      const newcomerPool =
+        scoredHaikus
+          .filter(
+            (item) =>
+              item.isNewUser &&
+              item.isNewPost
+          )
+          .sort(
+            (a, b) =>
+              b.score -
+              a.score
+          )
+
+      added =
+        0
+
+      for (
+        const item
+        of newcomerPool
+      ) {
+        if (
+          added >=
+          newcomerCount
+        ) {
+          break
+        }
+
+        if (
+          addCandidate(
+            item
+          )
+        ) {
+          added++
+        }
+      }
+
+      // -------------------------
+      // ランダム枠
+      // -------------------------
+
+      const randomPool = [
+        ...scoredHaikus,
+      ].sort(
+        (a, b) => {
+          const aRandom =
+            pseudoRandom(
+              `${discoverTimeBucket}-random-${a.haiku.id}`
+            )
+
+          const bRandom =
+            pseudoRandom(
+              `${discoverTimeBucket}-random-${b.haiku.id}`
+            )
+
+          return (
+            bRandom -
+            aRandom
+          )
+        }
+      )
+
+      added =
+        0
+
+      for (
+        const item
+        of randomPool
+      ) {
+        if (
+          added >=
+          randomCount
+        ) {
+          break
+        }
+
+        if (
+          addCandidate(
+            item
+          )
+        ) {
+          added++
+        }
+      }
+
+      // -------------------------
+      // 不足分補充
+      // -------------------------
+
+      if (
+        selected.length <
+        targetCount
+      ) {
+        for (
+          const item
+          of trendPool
+        ) {
+          if (
+            selected.length >=
+            targetCount
+          ) {
+            break
+          }
+
+          addCandidate(
+            item
+          )
+        }
+      }
+
+      // -------------------------
+      // 最終順序
+      // -------------------------
+
+      selected.sort(
+        (a, b) => {
+          const aRandom =
+            pseudoRandom(
+              `${discoverTimeBucket}-final-${a.haiku.id}`
+            )
+
+          const bRandom =
+            pseudoRandom(
+              `${discoverTimeBucket}-final-${b.haiku.id}`
+            )
+
+          return (
+            bRandom -
+            aRandom
+          )
+        }
+      )
+
+      return selected.map(
+        (item) =>
+          item.haiku
+      )
+    }, [
+      scoredHaikus,
+      discoverTimeBucket,
+    ])
 
   // =============================
   // 雅
   // =============================
 
-  const handleLike = async (haikuId: string) => {
-    if (!userId) {
-      alert('雅を贈るにはログインが必要です！')
-      router.push('/auth')
+  const handleLike = async (
+    haikuId: string
+  ) => {
+    if (
+      !userId
+    ) {
+      alert(
+        '雅を贈るにはログインが必要です！'
+      )
+
+      router.push(
+        '/auth'
+      )
+
       return
     }
 
     const isAlreadyLiked =
-      userLikes[haikuId] ?? false
+      userLikes[
+        haikuId
+      ] ??
+      false
 
     try {
-      if (isAlreadyLiked) {
-        // 雅を取り消す
+      // -------------------------
+      // 雅を取り消す
+      // -------------------------
 
-        const { error } = await supabase
+      if (
+        isAlreadyLiked
+      ) {
+        const {
+          error,
+        } = await supabase
           .from('likes_2')
           .delete()
-          .eq('haiku_id', String(haikuId))
-          .eq('user_id', userId)
+          .eq(
+            'haiku_id',
+            String(
+              haikuId
+            )
+          )
+          .eq(
+            'user_id',
+            userId
+          )
 
-        if (error) {
+        if (
+          error
+        ) {
           console.error(
             '雅取り消しエラー:',
             error
           )
 
-          alert('雅の取り消しに失敗しました')
+          alert(
+            '雅の取り消しに失敗しました'
+          )
+
           return
         }
 
-        setUserLikes((prev) => ({
-          ...prev,
-          [haikuId]: false,
-        }))
+        setUserLikes(
+          (prev) => ({
+            ...prev,
+            [haikuId]:
+              false,
+          })
+        )
 
-        setLikeCounts((prev) => ({
-          ...prev,
-          [haikuId]: Math.max(
-            (prev[haikuId] ?? 1) - 1,
-            0
-          ),
-        }))
-      } else {
-        // 雅を贈る
+        setLikeCounts(
+          (prev) => ({
+            ...prev,
+            [haikuId]:
+              Math.max(
+                (
+                  prev[
+                    haikuId
+                  ] ??
+                  1
+                ) -
+                  1,
+                0
+              ),
+          })
+        )
 
-        const { error } = await supabase
-          .from('likes_2')
-          .insert([
-            {
-              haiku_id: String(haikuId),
-              user_id: userId,
-            },
-          ])
+        setLikeRows(
+          (prev) =>
+            prev.filter(
+              (like) =>
+                !(
+                  String(
+                    like.haiku_id
+                  ) ===
+                    String(
+                      haikuId
+                    ) &&
+                  like.user_id ===
+                    userId
+                )
+            )
+        )
 
-        if (error) {
-          console.error('雅エラー:', error)
-          alert('雅を贈れませんでした')
-          return
-        }
+        return
+      }
 
-        setUserLikes((prev) => ({
-          ...prev,
-          [haikuId]: true,
-        }))
+      // -------------------------
+      // 雅を追加
+      // -------------------------
 
-        setLikeCounts((prev) => ({
+      const now =
+        new Date()
+          .toISOString()
+
+      const {
+        error,
+      } = await supabase
+        .from('likes_2')
+        .insert([
+          {
+            haiku_id:
+              String(
+                haikuId
+              ),
+
+            user_id:
+              userId,
+
+            created_at:
+              now,
+          },
+        ])
+
+      if (
+        error
+      ) {
+        console.error(
+          '雅エラー:',
+          error
+        )
+
+        alert(
+          '雅を贈れませんでした'
+        )
+
+        return
+      }
+
+      setUserLikes(
+        (prev) => ({
           ...prev,
           [haikuId]:
-            (prev[haikuId] ?? 0) + 1,
-        }))
-      }
+            true,
+        })
+      )
+
+      setLikeCounts(
+        (prev) => ({
+          ...prev,
+          [haikuId]:
+            (
+              prev[
+                haikuId
+              ] ??
+              0
+            ) +
+            1,
+        })
+      )
+
+      setLikeRows(
+        (prev) => [
+          ...prev,
+          {
+            haiku_id:
+              String(
+                haikuId
+              ),
+
+            user_id:
+              userId,
+
+            created_at:
+              now,
+          },
+        ]
+      )
     } catch (error) {
-      console.error('雅処理エラー:', error)
+      console.error(
+        '雅処理エラー:',
+        error
+      )
     }
   }
+
+  // =============================
+  // 勝負句投稿準備
+  // =============================
+
+  const prepareCompetitivePost =
+    async () => {
+      if (
+        !userId
+      ) {
+        throw new Error(
+          'ログイン情報がありません'
+        )
+      }
+
+      // -------------------------
+      // ratingを最新取得
+      // -------------------------
+
+      const {
+        data: profile,
+        error:
+          profileError,
+      } = await supabase
+        .from('profiles_3')
+        .select('rating')
+        .eq(
+          'id',
+          userId
+        )
+        .single()
+
+      if (
+        profileError
+      ) {
+        throw profileError
+      }
+
+      const rating =
+        typeof profile.rating ===
+        'number'
+          ? profile.rating
+          : 1000
+
+      // -------------------------
+      // 今日の勝負句数
+      // -------------------------
+
+      const {
+        start,
+        end,
+      } = getTodayJstRange()
+
+      const {
+        data:
+          todayCompetitive,
+        error:
+          countError,
+      } = await supabase
+        .from('haikus_2')
+        .select('id')
+        .eq(
+          'user_id',
+          userId
+        )
+        .eq(
+          'is_competitive',
+          true
+        )
+        .gte(
+          'battle_started_at',
+          start
+        )
+        .lt(
+          'battle_started_at',
+          end
+        )
+
+      if (
+        countError
+      ) {
+        throw countError
+      }
+
+      const used =
+        todayCompetitive?.length ??
+        0
+
+      if (
+        used >=
+        MAX_COMPETITIVE_PER_DAY
+      ) {
+        throw new Error(
+          '今日の勝負句は3句すべて詠み終えています'
+        )
+      }
+
+      // -------------------------
+      // ボーダー決定
+      // -------------------------
+
+      const border =
+        getBattleBorder(
+          rating
+        )
+
+      const startedAt =
+        new Date()
+
+      const endsAt =
+        new Date(
+          startedAt.getTime() +
+            COMPETITIVE_HOURS *
+              60 *
+              60 *
+              1000
+        )
+
+      return {
+        rating,
+        border,
+
+        startedAt:
+          startedAt.toISOString(),
+
+        endsAt:
+          endsAt.toISOString(),
+      }
+    }
 
   // =============================
   // 投稿
   // =============================
 
-  const handlePost = async (data: {
-  firstLine: string
-  secondLine: string
-  thirdLine: string
-  joshi: string
-  description: string
-  tags: string[]
-}) => {
-  if (!userId || !userName) {
-    alert('一句詠むにはログインが必要です！')
-    router.push('/auth')
-    return
-  }
-
-  // =============================
-  // ① まず句を投稿
-  // =============================
-
-  const {
-    data: insertedHaiku,
-    error: haikuError,
-  } = await supabase
-    .from('haikus_2')
-    .insert([
-      {
-        first_line: data.firstLine,
-        second_line: data.secondLine,
-        third_line: data.thirdLine,
-        joshi: data.joshi,
-        description: data.description,
-        author: userName,
-        avatar_url: userAvatar ?? '',
-        user_id: userId,
-        created_at: new Date().toISOString(),
-      },
-    ])
-    .select('id')
-    .single()
-
-  if (haikuError) {
-    console.error('投稿エラー:', haikuError)
-    throw haikuError
-  }
-
-  if (!insertedHaiku) {
-    throw new Error('投稿した句のIDを取得できませんでした')
-  }
-
-  // =============================
-  // ② 札を登録
-  // =============================
-
-  for (const tagName of data.tags) {
-    // -----------------------------
-    // 同名の札がすでにあるか確認
-    // -----------------------------
-
-    const {
-      data: existingTag,
-      error: searchTagError,
-    } = await supabase
-      .from('tags')
-      .select('id')
-      .eq('name', tagName)
-      .maybeSingle()
-
-    if (searchTagError) {
-      console.error(
-        '札検索エラー:',
-        searchTagError
+  const handlePost = async (
+    data: {
+      firstLine: string
+      secondLine: string
+      thirdLine: string
+      joshi: string
+      description: string
+      tags: string[]
+      isCompetitive: boolean
+    }
+  ) => {
+    if (
+      !userId ||
+      !userName
+    ) {
+      alert(
+        '一句詠むにはログインが必要です！'
       )
 
-      throw searchTagError
-    }
-
-    let tagId: number
-
-    // -----------------------------
-    // あれば既存の札を使用
-    // -----------------------------
-
-    if (existingTag) {
-      tagId = existingTag.id
-    } else {
-      // ---------------------------
-      // なければ新しい札を作成
-      // ---------------------------
-
-      const {
-        data: newTag,
-        error: createTagError,
-      } = await supabase
-        .from('tags')
-        .insert([
-          {
-            name: tagName,
-          },
-        ])
-        .select('id')
-        .single()
-
-      if (createTagError) {
-        console.error(
-          '札作成エラー:',
-          createTagError
-        )
-
-        throw createTagError
-      }
-
-      if (!newTag) {
-        throw new Error(
-          '作成した札のIDを取得できませんでした'
-        )
-      }
-
-      tagId = newTag.id
-    }
-
-    // =============================
-    // ③ 句と札を結びつける
-    // =============================
-
-    const { error: linkError } =
-      await supabase
-        .from('haiku_tags')
-        .insert([
-          {
-            haiku_id: String(
-              insertedHaiku.id
-            ),
-            tag_id: tagId,
-          },
-        ])
-
-    if (linkError) {
-      console.error(
-        '札紐付けエラー:',
-        linkError
+      router.push(
+        '/auth'
       )
 
-      throw linkError
-    }
-  }
-
-  // =============================
-  // ④ 投稿完了
-  // =============================
-
-  setActiveTab('new')
-
-  await loadHaikus()
-}
-
-  // =============================
-  // ＋ボタン
-  // =============================
-
-  const handleOpenPost = () => {
-    if (!userId || !userName) {
-      alert('一句詠むにはログインが必要です！')
-      router.push('/auth')
       return
     }
 
-    setIsModalOpen(true)
+    // =============================
+    // 勝負句情報
+    // =============================
+
+    let battleInfo: {
+      rating: number
+      border: number
+      startedAt: string
+      endsAt: string
+    } | null =
+      null
+
+    if (
+      data.isCompetitive
+    ) {
+      try {
+        battleInfo =
+          await prepareCompetitivePost()
+      } catch (error) {
+        console.error(
+          '勝負句準備エラー:',
+          error
+        )
+
+        const message =
+          error instanceof
+          Error
+            ? error.message
+            : '勝負句を投稿できませんでした'
+
+        alert(
+          message
+        )
+
+        throw error
+      }
+    }
+
+    // =============================
+    // ① 句
+    // =============================
+
+    const createdAt =
+      new Date()
+        .toISOString()
+
+    const {
+      data:
+        insertedHaiku,
+
+      error:
+        haikuError,
+    } = await supabase
+      .from('haikus_2')
+      .insert([
+        {
+          first_line:
+            data.firstLine,
+
+          second_line:
+            data.secondLine,
+
+          third_line:
+            data.thirdLine,
+
+          joshi:
+            data.joshi,
+
+          description:
+            data.description,
+
+          author:
+            userName,
+
+          avatar_url:
+            userAvatar ??
+            '',
+
+          user_id:
+            userId,
+
+          created_at:
+            createdAt,
+
+          // ---------------------
+          // 勝負句
+          // ---------------------
+
+          is_competitive:
+            data.isCompetitive,
+
+          battle_started_at:
+            battleInfo
+              ?.startedAt ??
+            null,
+
+          battle_ends_at:
+            battleInfo
+              ?.endsAt ??
+            null,
+
+          battle_like_border:
+            battleInfo
+              ?.border ??
+            null,
+
+          battle_rating_before:
+            battleInfo
+              ?.rating ??
+            null,
+
+          battle_rating_change:
+            null,
+
+          battle_resolved:
+            false,
+        },
+      ])
+      .select('id')
+      .single()
+
+    if (
+      haikuError
+    ) {
+      console.error(
+        '投稿エラー:',
+        haikuError
+      )
+
+      throw haikuError
+    }
+
+    if (
+      !insertedHaiku
+    ) {
+      throw new Error(
+        '投稿した句のIDを取得できませんでした'
+      )
+    }
+
+    // =============================
+    // ② 札
+    // =============================
+
+    for (
+      const tagName
+      of data.tags
+    ) {
+      const {
+        data:
+          existingTag,
+
+        error:
+          searchTagError,
+      } = await supabase
+        .from('tags')
+        .select('id')
+        .eq(
+          'name',
+          tagName
+        )
+        .maybeSingle()
+
+      if (
+        searchTagError
+      ) {
+        throw searchTagError
+      }
+
+      let tagId:
+        number
+
+      if (
+        existingTag
+      ) {
+        tagId =
+          existingTag.id
+      } else {
+        const {
+          data:
+            newTag,
+
+          error:
+            createTagError,
+        } = await supabase
+          .from('tags')
+          .insert([
+            {
+              name:
+                tagName,
+            },
+          ])
+          .select('id')
+          .single()
+
+        if (
+          createTagError
+        ) {
+          throw createTagError
+        }
+
+        if (
+          !newTag
+        ) {
+          throw new Error(
+            '札の作成に失敗しました'
+          )
+        }
+
+        tagId =
+          newTag.id
+      }
+
+      const {
+        error:
+          linkError,
+      } = await supabase
+        .from(
+          'haiku_tags'
+        )
+        .insert([
+          {
+            haiku_id:
+              String(
+                insertedHaiku.id
+              ),
+
+            tag_id:
+              tagId,
+          },
+        ])
+
+      if (
+        linkError
+      ) {
+        throw linkError
+      }
+    }
+
+    // =============================
+    // ③ 投稿後再読込
+    // =============================
+
+    setActiveTab(
+      'new'
+    )
+
+    await Promise.all([
+      loadHaikus(),
+      loadCompetitiveStatus(),
+    ])
   }
+
+  // =============================
+  // 投稿ボタン
+  // =============================
+
+  const handleOpenPost =
+    () => {
+      if (
+        !userId ||
+        !userName
+      ) {
+        alert(
+          '一句詠むにはログインが必要です！'
+        )
+
+        router.push(
+          '/auth'
+        )
+
+        return
+      }
+
+      setIsModalOpen(
+        true
+      )
+    }
 
   // =============================
   // タブ変更
   // =============================
 
-  const handleTabChange = (tab: TimelineTab) => {
-    // 贔屓はログイン必須
-    if (tab === 'favorite' && !userId) {
-      alert('贔屓を見るにはログインが必要です！')
-      router.push('/auth')
-      return
-    }
+  const handleTabChange =
+    (
+      tab:
+        TimelineTab
+    ) => {
+      if (
+        tab ===
+          'favorite' &&
+        !userId
+      ) {
+        alert(
+          '贔屓を見るにはログインが必要です！'
+        )
 
-    setActiveTab(tab)
-  }
+        router.push(
+          '/auth'
+        )
 
-  // =============================
-  // タイムライン内容
-  // =============================
+        return
+      }
 
-  const renderTimeline = () => {
-    if (isLoading || authLoading) {
-      return (
-        <p
-          style={{
-            textAlign: 'center',
-            color: '#777',
-            marginTop: '40px',
-          }}
-        >
-          読み込み中...
-        </p>
+      setActiveTab(
+        tab
       )
     }
 
-    // -------------------------
-    // みつける
-    // -------------------------
+  // =============================
+  // 俳句一覧
+  // =============================
 
-    if (activeTab === 'discover') {
+  const renderHaikuList =
+    (
+      list:
+        Haiku[]
+    ) => {
       return (
         <div
           style={{
-            textAlign: 'center',
-            padding: '70px 20px',
-            color: '#888',
+            display:
+              'flex',
+
+            flexDirection:
+              'column',
+
+            gap:
+              '15px',
           }}
         >
-          <div
-            style={{
-              fontSize: '2rem',
-              marginBottom: '15px',
-            }}
-          >
-            🔎
-          </div>
+          {list.map(
+            (haiku) => (
+              <HaikuCard
+                key={
+                  haiku.id
+                }
 
-          <div
-            style={{
-              color: '#ddd',
-              fontWeight: 'bold',
-              marginBottom: '8px',
-            }}
-          >
-            みつける
-          </div>
+                haiku={
+                  haiku
+                }
 
-          <p
-            style={{
-              margin: 0,
-              fontSize: '0.85rem',
-              lineHeight: '1.8',
-            }}
-          >
-            あなたがまだ知らない一句との
-            <br />
-            出会いを準備しています。
-          </p>
+                isLiked={
+                  userLikes[
+                    haiku.id
+                  ] ??
+                  false
+                }
+
+                likeCount={
+                  likeCounts[
+                    haiku.id
+                  ] ??
+                  0
+                }
+
+                onLike={
+                  handleLike
+                }
+
+                currentUserId={
+                  userId
+                }
+              />
+            )
+          )}
         </div>
       )
     }
 
-    // -------------------------
-    // 贔屓
-    // -------------------------
+  // =============================
+  // タイムライン
+  // =============================
 
-    if (activeTab === 'favorite') {
-      return (
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '70px 20px',
-            color: '#888',
-          }}
-        >
-          <div
-            style={{
-              fontSize: '2rem',
-              marginBottom: '15px',
-            }}
-          >
-            🌸
-          </div>
-
-          <div
-            style={{
-              color: '#ddd',
-              fontWeight: 'bold',
-              marginBottom: '8px',
-            }}
-          >
-            贔屓
-          </div>
-
+  const renderTimeline =
+    () => {
+      if (
+        isLoading ||
+        authLoading
+      ) {
+        return (
           <p
             style={{
-              margin: 0,
-              fontSize: '0.85rem',
-              lineHeight: '1.8',
+              textAlign:
+                'center',
+
+              color:
+                '#777',
+
+              marginTop:
+                '40px',
             }}
           >
-            贔屓にしている歌人の句を
-            <br />
-            ここで楽しめるようになります。
+            読み込み中...
           </p>
-        </div>
+        )
+      }
+
+      // =========================
+      // みつける
+      // =========================
+
+      if (
+        activeTab ===
+        'discover'
+      ) {
+        if (
+          discoverHaikus.length ===
+          0
+        ) {
+          return (
+            <div
+              style={{
+                textAlign:
+                  'center',
+
+                padding:
+                  '60px 20px',
+
+                color:
+                  '#888',
+              }}
+            >
+              まだ見つけられる句がありません。
+            </div>
+          )
+        }
+
+        return renderHaikuList(
+          discoverHaikus
+        )
+      }
+
+      // =========================
+      // 贔屓
+      // =========================
+
+      if (
+        activeTab ===
+        'favorite'
+      ) {
+        if (
+          favoriteLoading ||
+          !favoriteLoaded
+        ) {
+          return (
+            <p
+              style={{
+                textAlign:
+                  'center',
+
+                color:
+                  '#777',
+
+                marginTop:
+                  '40px',
+              }}
+            >
+              贔屓の句を集めています...
+            </p>
+          )
+        }
+
+        const favoriteHaikus =
+          haikus.filter(
+            (haiku) =>
+              haiku.user_id &&
+              favoriteUserIds.includes(
+                String(
+                  haiku.user_id
+                )
+              )
+          )
+
+        if (
+          favoriteUserIds.length ===
+          0
+        ) {
+          return (
+            <div
+              style={{
+                textAlign:
+                  'center',
+
+                padding:
+                  '60px 20px',
+              }}
+            >
+              <div
+                style={{
+                  fontSize:
+                    '2rem',
+
+                  marginBottom:
+                    '15px',
+                }}
+              >
+                🌸
+              </div>
+
+              <div
+                style={{
+                  color:
+                    '#eee',
+
+                  fontWeight:
+                    'bold',
+
+                  marginBottom:
+                    '15px',
+                }}
+              >
+                まだ贔屓の歌人はいません
+              </div>
+
+              <button
+                type="button"
+
+                onClick={() =>
+                  router.push(
+                    '/find'
+                  )
+                }
+
+                style={{
+                  backgroundColor:
+                    '#ffda79',
+
+                  color:
+                    '#121212',
+
+                  border:
+                    'none',
+
+                  borderRadius:
+                    '20px',
+
+                  padding:
+                    '9px 18px',
+
+                  fontWeight:
+                    'bold',
+
+                  cursor:
+                    'pointer',
+                }}
+              >
+                歌人を探す
+              </button>
+            </div>
+          )
+        }
+
+        if (
+          favoriteHaikus.length ===
+          0
+        ) {
+          return (
+            <div
+              style={{
+                textAlign:
+                  'center',
+
+                padding:
+                  '60px 20px',
+
+                color:
+                  '#888',
+              }}
+            >
+              贔屓の歌人の句は
+              <br />
+              まだありません。
+            </div>
+          )
+        }
+
+        return renderHaikuList(
+          favoriteHaikus
+        )
+      }
+
+      // =========================
+      // 新着
+      // =========================
+
+      if (
+        haikus.length ===
+        0
+      ) {
+        return (
+          <p
+            style={{
+              textAlign:
+                'center',
+
+              color:
+                '#777',
+
+              marginTop:
+                '40px',
+            }}
+          >
+            まだ句は詠まれていません。
+          </p>
+        )
+      }
+
+      return renderHaikuList(
+        haikus
       )
     }
-
-    // -------------------------
-    // 新着
-    // -------------------------
-
-    if (haikus.length === 0) {
-      return (
-        <p
-          style={{
-            textAlign: 'center',
-            color: '#777',
-            marginTop: '40px',
-          }}
-        >
-          まだ句は詠まれていません。
-        </p>
-      )
-    }
-
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '15px',
-        }}
-      >
-        {haikus.map((haiku) => (
-          <HaikuCard
-            key={haiku.id}
-            haiku={haiku}
-            isLiked={
-              userLikes[haiku.id] ?? false
-            }
-            likeCount={
-              likeCounts[haiku.id] ?? 0
-            }
-            onLike={handleLike}
-          />
-        ))}
-      </div>
-    )
-  }
 
   // =============================
   // 画面
@@ -709,62 +2428,114 @@ const loadHaikus = async () => {
   return (
     <div
       style={{
-        backgroundColor: '#121212',
-        color: '#fff',
-        minHeight: '100vh',
-        paddingBottom: '100px',
+        backgroundColor:
+          '#121212',
+
+        color:
+          '#fff',
+
+        minHeight:
+          '100vh',
+
+        paddingBottom:
+          '100px',
       }}
     >
       <main
         style={{
-          maxWidth: '600px',
-          margin: '0 auto',
-          padding: '20px',
+          maxWidth:
+            '600px',
+
+          margin:
+            '0 auto',
+
+          padding:
+            '20px',
         }}
       >
-        {/* ヘッダー */}
-
         <Header
-          userId={userId}
-          userName={userName}
-          userAvatar={userAvatar}
-        />
+          userId={
+            userId
+          }
 
-        {/* 新着 / みつける / 贔屓 */}
+          userName={
+            userName
+          }
+
+          userAvatar={
+            userAvatar
+          }
+        />
 
         <TimelineTabs
-          activeTab={activeTab}
-          onChange={handleTabChange}
-        />
+          activeTab={
+            activeTab
+          }
 
-        {/* タイムライン */}
+          onChange={
+            handleTabChange
+          }
+        />
 
         {renderTimeline()}
 
-        {/* 一句詠む */}
-
         <button
           type="button"
-          onClick={handleOpenPost}
+
+          onClick={
+            handleOpenPost
+          }
+
           aria-label="一句詠む"
+
           style={{
-            position: 'fixed',
-            bottom: '90px',
-            right: '25px',
-            width: '60px',
-            height: '60px',
-            borderRadius: '50%',
-            backgroundColor: '#ffda79',
-            color: '#121212',
-            fontSize: '2rem',
-            border: 'none',
+            position:
+              'fixed',
+
+            bottom:
+              '90px',
+
+            right:
+              '25px',
+
+            width:
+              '60px',
+
+            height:
+              '60px',
+
+            borderRadius:
+              '50%',
+
+            backgroundColor:
+              '#ffda79',
+
+            color:
+              '#121212',
+
+            fontSize:
+              '2rem',
+
+            border:
+              'none',
+
             boxShadow:
               '0 4px 15px rgba(255, 218, 121, 0.4)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 100,
+
+            cursor:
+              'pointer',
+
+            display:
+              'flex',
+
+            alignItems:
+              'center',
+
+            justifyContent:
+              'center',
+
+            zIndex:
+              100,
           }}
         >
           ＋
@@ -772,15 +2543,29 @@ const loadHaikus = async () => {
       </main>
 
       <PostModal
-        isOpen={isModalOpen}
-        onClose={() =>
-          setIsModalOpen(false)
+        isOpen={
+          isModalOpen
         }
-        onSubmit={handlePost}
+
+        onClose={() =>
+          setIsModalOpen(
+            false
+          )
+        }
+
+        onSubmit={
+          handlePost
+        }
+
+        competitiveRemaining={
+          competitiveRemaining
+        }
       />
 
       <BottomNav
-        currentUserId={userId}
+        currentUserId={
+          userId
+        }
       />
     </div>
   )

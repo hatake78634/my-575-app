@@ -15,15 +15,38 @@ export type Haiku = {
   user_id?: string
   created_at?: string
 
-  // この句についている札
+  // 札
   tags?: string[]
+
+  // =============================
+  // 勝負句
+  // =============================
+
+  is_competitive?: boolean
+
+  battle_started_at?: string | null
+  battle_ends_at?: string | null
+
+  battle_like_border?: number | null
+  battle_rating_before?: number | null
+  battle_rating_change?: number | null
+
+  battle_resolved?: boolean
 }
 
 type HaikuCardProps = {
   haiku: Haiku
+
   isLiked: boolean
+
   likeCount: number
-  onLike: (haikuId: string) => void
+
+  onLike: (
+    haikuId: string
+  ) => void
+
+  // 今ログインしているユーザー
+  currentUserId?: string | null
 }
 
 export default function HaikuCard({
@@ -31,6 +54,7 @@ export default function HaikuCard({
   isLiked,
   likeCount,
   onLike,
+  currentUserId,
 }: HaikuCardProps) {
   const router = useRouter()
 
@@ -38,56 +62,181 @@ export default function HaikuCard({
   // 投稿日時
   // =============================
 
-  const formatDate = (dateString?: string) => {
+  const formatDate = (
+    dateString?: string
+  ) => {
     if (!dateString) {
       return ''
     }
 
-    const date = new Date(dateString)
+    const date =
+      new Date(dateString)
 
-    if (Number.isNaN(date.getTime())) {
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
       return ''
     }
 
-    const now = new Date()
+    const now =
+      new Date()
 
-    const diffMin = Math.floor(
-      (now.getTime() - date.getTime()) /
-        (1000 * 60)
-    )
+    const diffMin =
+      Math.floor(
+        (
+          now.getTime() -
+          date.getTime()
+        ) /
+          (
+            1000 *
+            60
+          )
+      )
 
-    if (diffMin < 1) {
+    if (
+      diffMin < 1
+    ) {
       return 'たった今'
     }
 
-    if (diffMin < 60) {
+    if (
+      diffMin < 60
+    ) {
       return `${diffMin}分前`
     }
 
-    const diffHour = Math.floor(
-      diffMin / 60
-    )
+    const diffHour =
+      Math.floor(
+        diffMin / 60
+      )
 
-    if (diffHour < 24) {
+    if (
+      diffHour < 24
+    ) {
       return `${diffHour}時間前`
     }
 
-    const month = date.getMonth() + 1
-    const day = date.getDate()
+    const month =
+      date.getMonth() + 1
+
+    const day =
+      date.getDate()
 
     return `${month}月${day}日`
   }
+
+  // =============================
+  // 自分の句か
+  // =============================
+
+  const isOwnHaiku =
+    Boolean(
+      currentUserId &&
+        haiku.user_id &&
+        String(
+          currentUserId
+        ) ===
+          String(
+            haiku.user_id
+          )
+    )
+
+  // =============================
+  // 本人だけ勝負句を認識
+  // =============================
+
+  const showBattleInfo =
+    isOwnHaiku &&
+    haiku.is_competitive ===
+      true
+
+  // =============================
+  // 勝負句の残り時間
+  // =============================
+
+  const getBattleRemaining =
+    () => {
+      if (
+        !haiku.battle_ends_at
+      ) {
+        return ''
+      }
+
+      const endTime =
+        new Date(
+          haiku.battle_ends_at
+        ).getTime()
+
+      const now =
+        Date.now()
+
+      const diff =
+        endTime - now
+
+      if (
+        diff <= 0
+      ) {
+        return '評価期間終了'
+      }
+
+      const totalMinutes =
+        Math.floor(
+          diff /
+            (
+              1000 *
+              60
+            )
+        )
+
+      const hours =
+        Math.floor(
+          totalMinutes /
+            60
+        )
+
+      const minutes =
+        totalMinutes %
+        60
+
+      if (
+        hours >= 24
+      ) {
+        const days =
+          Math.floor(
+            hours / 24
+          )
+
+        const remainingHours =
+          hours % 24
+
+        return `残り ${days}日${remainingHours}時間`
+      }
+
+      if (
+        hours > 0
+      ) {
+        return `残り ${hours}時間${minutes}分`
+      }
+
+      return `残り ${minutes}分`
+    }
 
   // =============================
   // 歌人録へ
   // =============================
 
   const openUser = () => {
-    if (!haiku.user_id) {
+    if (
+      !haiku.user_id
+    ) {
       return
     }
 
-    router.push(`/user/${haiku.user_id}`)
+    router.push(
+      `/user/${haiku.user_id}`
+    )
   }
 
   // =============================
@@ -95,16 +244,22 @@ export default function HaikuCard({
   // =============================
 
   const openHaiku = () => {
-    router.push(`/haiku/${haiku.id}`)
+    router.push(
+      `/haiku/${haiku.id}`
+    )
   }
 
   // =============================
   // 札へ
   // =============================
 
-  const openTag = (tag: string) => {
+  const openTag = (
+    tag: string
+  ) => {
     router.push(
-      `/find?tag=${encodeURIComponent(tag)}`
+      `/find?tag=${encodeURIComponent(
+        tag
+      )}`
     )
   }
 
@@ -115,11 +270,20 @@ export default function HaikuCard({
   return (
     <div
       style={{
-        backgroundColor: '#1e1e1e',
-        borderRadius: '16px',
-        padding: '20px',
-        border: '1px solid #2a2a2a',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+        backgroundColor:
+          '#1e1e1e',
+
+        borderRadius:
+          '16px',
+
+        padding:
+          '20px',
+
+        border:
+          '1px solid #2a2a2a',
+
+        boxShadow:
+          '0 4px 12px rgba(0,0,0,0.3)',
       }}
     >
       {/* =====================
@@ -128,43 +292,83 @@ export default function HaikuCard({
 
       <div
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          marginBottom: '15px',
+          display:
+            'flex',
+
+          alignItems:
+            'center',
+
+          gap:
+            '10px',
+
+          marginBottom:
+            '15px',
         }}
       >
         {/* アイコン */}
 
         {haiku.avatar_url ? (
           <Image
-            src={haiku.avatar_url}
-            alt={`${haiku.author || '歌人'}のアイコン`}
+            src={
+              haiku.avatar_url
+            }
+
+            alt={`${
+              haiku.author ||
+              '歌人'
+            }のアイコン`}
+
             width={40}
             height={40}
-            onClick={openUser}
+
+            onClick={
+              openUser
+            }
+
             style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              objectFit: 'cover',
-              cursor: haiku.user_id
-                ? 'pointer'
-                : 'default',
+              width:
+                '40px',
+
+              height:
+                '40px',
+
+              borderRadius:
+                '50%',
+
+              objectFit:
+                'cover',
+
+              cursor:
+                haiku.user_id
+                  ? 'pointer'
+                  : 'default',
             }}
+
             unoptimized
           />
         ) : (
           <div
-            onClick={openUser}
+            onClick={
+              openUser
+            }
+
             style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              backgroundColor: '#444',
-              cursor: haiku.user_id
-                ? 'pointer'
-                : 'default',
+              width:
+                '40px',
+
+              height:
+                '40px',
+
+              borderRadius:
+                '50%',
+
+              backgroundColor:
+                '#444',
+
+              cursor:
+                haiku.user_id
+                  ? 'pointer'
+                  : 'default',
             }}
           />
         )}
@@ -173,41 +377,287 @@ export default function HaikuCard({
 
         <div>
           <div
-            onClick={openUser}
+            onClick={
+              openUser
+            }
+
             style={{
-              fontWeight: 'bold',
-              fontSize: '0.95rem',
-              cursor: haiku.user_id
-                ? 'pointer'
-                : 'default',
-              color: '#fff',
+              fontWeight:
+                'bold',
+
+              fontSize:
+                '0.95rem',
+
+              cursor:
+                haiku.user_id
+                  ? 'pointer'
+                  : 'default',
+
+              color:
+                '#fff',
             }}
           >
-            {haiku.author || '名無し'}
+            {haiku.author ||
+              '名無し'}
           </div>
 
           <div
             style={{
-              fontSize: '0.75rem',
-              color: '#888',
+              fontSize:
+                '0.75rem',
+
+              color:
+                '#888',
             }}
           >
-            {formatDate(haiku.created_at)}
+            {formatDate(
+              haiku.created_at
+            )}
           </div>
         </div>
       </div>
+
+      {/* =====================
+          本人だけ勝負句情報
+      ===================== */}
+
+      {showBattleInfo && (
+        <div
+          style={{
+            marginBottom:
+              '16px',
+
+            padding:
+              '12px 14px',
+
+            borderRadius:
+              '12px',
+
+            backgroundColor:
+              '#29251c',
+
+            border:
+              '1px solid #554923',
+          }}
+        >
+          <div
+            style={{
+              display:
+                'flex',
+
+              justifyContent:
+                'space-between',
+
+              alignItems:
+                'center',
+
+              gap:
+                '10px',
+
+              marginBottom:
+                '7px',
+            }}
+          >
+            <div
+              style={{
+                color:
+                  '#ffda79',
+
+                fontWeight:
+                  'bold',
+
+                fontSize:
+                  '0.85rem',
+              }}
+            >
+              ⚔️ 勝負の俳句
+            </div>
+
+            <div
+              style={{
+                color:
+                  '#aaa',
+
+                fontSize:
+                  '0.72rem',
+              }}
+            >
+              {getBattleRemaining()}
+            </div>
+          </div>
+
+          {/* 評価中 */}
+
+          {!haiku.battle_resolved &&
+            haiku.battle_ends_at &&
+            new Date(
+              haiku.battle_ends_at
+            ).getTime() >
+              Date.now() && (
+              <>
+                <div
+                  style={{
+                    fontSize:
+                      '0.9rem',
+
+                    color:
+                      '#fff',
+
+                    marginBottom:
+                      '4px',
+                  }}
+                >
+                  現在{' '}
+                  <strong>
+                    {likeCount}
+                  </strong>
+                  {' / '}
+                  <strong>
+                    {haiku.battle_like_border ??
+                      '?'}
+                  </strong>
+                  {' '}
+                  雅
+                </div>
+
+                <div
+                  style={{
+                    color:
+                      '#999',
+
+                    fontSize:
+                      '0.72rem',
+                  }}
+                >
+                  48時間の評価期間中です
+                </div>
+              </>
+            )}
+
+          {/* 48時間終了・未判定 */}
+
+          {!haiku.battle_resolved &&
+            haiku.battle_ends_at &&
+            new Date(
+              haiku.battle_ends_at
+            ).getTime() <=
+              Date.now() && (
+              <>
+                <div
+                  style={{
+                    color:
+                      '#ddd',
+
+                    fontSize:
+                      '0.85rem',
+
+                    marginBottom:
+                      '4px',
+                  }}
+                >
+                  最終結果：
+                  {' '}
+                  {likeCount}
+                  {' / '}
+                  {haiku.battle_like_border ??
+                    '?'}
+                  {' '}
+                  雅
+                </div>
+
+                <div
+                  style={{
+                    color:
+                      '#aaa',
+
+                    fontSize:
+                      '0.72rem',
+                  }}
+                >
+                  番付の判定を待っています
+                </div>
+              </>
+            )}
+
+          {/* 判定済み */}
+
+          {haiku.battle_resolved && (
+            <>
+              <div
+                style={{
+                  color:
+                    '#ddd',
+
+                  fontSize:
+                    '0.85rem',
+
+                  marginBottom:
+                    '4px',
+                }}
+              >
+                最終結果：
+                {' '}
+                {likeCount}
+                {' / '}
+                {haiku.battle_like_border ??
+                  '?'}
+                {' '}
+                雅
+              </div>
+
+              <div
+                style={{
+                  fontWeight:
+                    'bold',
+
+                  color:
+                    (
+                      haiku.battle_rating_change ??
+                      0
+                    ) >= 0
+                      ? '#ffda79'
+                      : '#ff8f8f',
+
+                  fontSize:
+                    '0.85rem',
+                }}
+              >
+                rating{' '}
+                {(
+                  haiku.battle_rating_change ??
+                  0
+                ) >= 0
+                  ? '+'
+                  : ''}
+                {haiku.battle_rating_change ??
+                  0}
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {/* =====================
           俳句本文
       ===================== */}
 
       <div
-        onClick={openHaiku}
+        onClick={
+          openHaiku
+        }
+
         style={{
-          cursor: 'pointer',
-          marginBottom: '18px',
-          color: '#f0f0f0',
-          textAlign: 'center',
+          cursor:
+            'pointer',
+
+          marginBottom:
+            '18px',
+
+          color:
+            '#f0f0f0',
+
+          textAlign:
+            'center',
         }}
       >
         {/* 序詞 */}
@@ -215,10 +665,17 @@ export default function HaikuCard({
         {haiku.joshi && (
           <div
             style={{
-              fontSize: '0.9rem',
-              color: '#b0a892',
-              marginBottom: '10px',
-              fontStyle: 'italic',
+              fontSize:
+                '0.9rem',
+
+              color:
+                '#b0a892',
+
+              marginBottom:
+                '10px',
+
+              fontStyle:
+                'italic',
             }}
           >
             {haiku.joshi}
@@ -229,16 +686,26 @@ export default function HaikuCard({
 
         <div
           style={{
-            display: 'inline-block',
-            textAlign: 'left',
+            display:
+              'inline-block',
+
+            textAlign:
+              'left',
           }}
         >
           <div
             style={{
-              fontSize: '1.2rem',
-              fontWeight: 'bold',
-              lineHeight: '1.8',
-              letterSpacing: '2px',
+              fontSize:
+                '1.2rem',
+
+              fontWeight:
+                'bold',
+
+              lineHeight:
+                '1.8',
+
+              letterSpacing:
+                '2px',
             }}
           >
             {haiku.first_line}
@@ -246,11 +713,20 @@ export default function HaikuCard({
 
           <div
             style={{
-              fontSize: '1.2rem',
-              fontWeight: 'bold',
-              lineHeight: '1.8',
-              letterSpacing: '2px',
-              marginLeft: '30px',
+              fontSize:
+                '1.2rem',
+
+              fontWeight:
+                'bold',
+
+              lineHeight:
+                '1.8',
+
+              letterSpacing:
+                '2px',
+
+              marginLeft:
+                '30px',
             }}
           >
             {haiku.second_line}
@@ -258,11 +734,20 @@ export default function HaikuCard({
 
           <div
             style={{
-              fontSize: '1.2rem',
-              fontWeight: 'bold',
-              lineHeight: '1.8',
-              letterSpacing: '2px',
-              marginLeft: '60px',
+              fontSize:
+                '1.2rem',
+
+              fontWeight:
+                'bold',
+
+              lineHeight:
+                '1.8',
+
+              letterSpacing:
+                '2px',
+
+              marginLeft:
+                '60px',
             }}
           >
             {haiku.third_line}
@@ -274,36 +759,70 @@ export default function HaikuCard({
           札
       ===================== */}
 
-      {haiku.tags && haiku.tags.length > 0 && (
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '7px',
-            marginBottom: '14px',
-          }}
-        >
-          {haiku.tags.map((tag) => (
-            <button
-              key={tag}
-              type="button"
-              onClick={() => openTag(tag)}
-              title={`${tag}の札を見る`}
-              style={{
-                backgroundColor: '#302d24',
-                color: '#ffda79',
-                border: '1px solid #554d35',
-                borderRadius: '18px',
-                padding: '5px 10px',
-                fontSize: '0.78rem',
-                cursor: 'pointer',
-              }}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
-      )}
+      {haiku.tags &&
+        haiku.tags.length >
+          0 && (
+          <div
+            style={{
+              display:
+                'flex',
+
+              flexWrap:
+                'wrap',
+
+              gap:
+                '7px',
+
+              marginBottom:
+                '14px',
+            }}
+          >
+            {haiku.tags.map(
+              (tag) => (
+                <button
+                  key={
+                    tag
+                  }
+
+                  type="button"
+
+                  onClick={() =>
+                    openTag(
+                      tag
+                    )
+                  }
+
+                  title={`${tag}の札を見る`}
+
+                  style={{
+                    backgroundColor:
+                      '#302d24',
+
+                    color:
+                      '#ffda79',
+
+                    border:
+                      '1px solid #554d35',
+
+                    borderRadius:
+                      '18px',
+
+                    padding:
+                      '5px 10px',
+
+                    fontSize:
+                      '0.78rem',
+
+                    cursor:
+                      'pointer',
+                  }}
+                >
+                  {tag}
+                </button>
+              )
+            )}
+          </div>
+        )}
 
       {/* =====================
           雅・返歌
@@ -311,59 +830,116 @@ export default function HaikuCard({
 
       <div
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '20px',
-          borderTop: '1px solid #2a2a2a',
-          paddingTop: '12px',
+          display:
+            'flex',
+
+          alignItems:
+            'center',
+
+          gap:
+            '20px',
+
+          borderTop:
+            '1px solid #2a2a2a',
+
+          paddingTop:
+            '12px',
         }}
       >
         {/* 雅 */}
 
         <button
           type="button"
-          onClick={() => onLike(haiku.id)}
+
+          onClick={() =>
+            onLike(
+              haiku.id
+            )
+          }
+
           title="雅を贈る"
+
           style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: isLiked
-              ? '#ffb7c5'
-              : '#aaa',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '0.95rem',
+            background:
+              'none',
+
+            border:
+              'none',
+
+            cursor:
+              'pointer',
+
+            color:
+              isLiked
+                ? '#ffb7c5'
+                : '#aaa',
+
+            display:
+              'flex',
+
+            alignItems:
+              'center',
+
+            gap:
+              '6px',
+
+            fontSize:
+              '0.95rem',
           }}
         >
           <span
             style={{
-              fontSize: '1.2rem',
+              fontSize:
+                '1.2rem',
             }}
           >
-            {isLiked ? '🌸' : '✿'}
+            {isLiked
+              ? '🌸'
+              : '✿'}
           </span>
 
-          <span>{likeCount}</span>
+          <span>
+            {likeCount}
+          </span>
 
-          <span>雅</span>
+          <span>
+            雅
+          </span>
         </button>
 
         {/* 詳細・返歌 */}
 
         <button
           type="button"
-          onClick={openHaiku}
+
+          onClick={
+            openHaiku
+          }
+
           style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: '#aaa',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '0.95rem',
+            background:
+              'none',
+
+            border:
+              'none',
+
+            cursor:
+              'pointer',
+
+            color:
+              '#aaa',
+
+            display:
+              'flex',
+
+            alignItems:
+              'center',
+
+            gap:
+              '6px',
+
+            fontSize:
+              '0.95rem',
           }}
         >
           💬 詳細・返歌

@@ -1,7 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import {
+  usePathname,
+  useRouter,
+} from 'next/navigation'
 
 type BottomNavProps = {
   currentUserId: string | null
@@ -11,10 +14,16 @@ export default function BottomNav({
   currentUserId,
 }: BottomNavProps) {
   const router = useRouter()
+  const pathname = usePathname()
 
-  const requireLogin = (path: string) => {
+  const requireLogin = (
+    path: string
+  ) => {
     if (!currentUserId) {
-      alert('この機能を使うにはログインが必要です！')
+      alert(
+        'この機能を使うにはログインが必要です！'
+      )
+
       router.push('/auth')
       return
     }
@@ -22,8 +31,16 @@ export default function BottomNav({
     router.push(path)
   }
 
-  const comingSoon = (name: string) => {
-    alert(`${name}は現在開発中です！`)
+  const isActive = (
+    path: string
+  ) => {
+    if (path === '/') {
+      return pathname === '/'
+    }
+
+    return pathname.startsWith(
+      path
+    )
   }
 
   return (
@@ -40,101 +57,247 @@ export default function BottomNav({
         alignItems: 'center',
         padding: '10px 0',
         zIndex: 90,
-        boxShadow: '0 -4px 10px rgba(0,0,0,0.3)',
+        boxShadow:
+          '0 -4px 10px rgba(0,0,0,0.3)',
       }}
     >
-      {/* ホーム */}
+      {/* =====================
+          ホーム
+      ===================== */}
+
       <Link
         href="/"
         style={{
           ...navLinkStyle,
-          color: '#ffda79',
-          fontWeight: 'bold',
+
+          color: isActive('/')
+            ? '#ffda79'
+            : '#aaa',
+
+          fontWeight: isActive('/')
+            ? 'bold'
+            : 'normal',
         }}
       >
-        <span style={iconStyle}>🏠</span>
-        <span>ホーム</span>
+        <span
+          style={iconStyle}
+        >
+          🏠
+        </span>
+
+        <span>
+          ホーム
+        </span>
       </Link>
 
-      {/* 探す */}
+      {/* =====================
+          探す
+      ===================== */}
+
       <Link
         href="/find"
         style={{
           ...navLinkStyle,
-          color: '#aaa',
+
+          color: isActive(
+            '/find'
+          )
+            ? '#ffda79'
+            : '#aaa',
+
+          fontWeight: isActive(
+            '/find'
+          )
+            ? 'bold'
+            : 'normal',
         }}
       >
-        <span style={iconStyle}>🔎</span>
-        <span>探す</span>
+        <span
+          style={iconStyle}
+        >
+          🔎
+        </span>
+
+        <span>
+          探す
+        </span>
       </Link>
 
-      {/* 歌合 */}
+      {/* =====================
+          歌合
+      ===================== */}
+
       <button
         type="button"
-        onClick={() => requireLogin('/utaawase')}
-        style={navButtonStyle('#aaa')}
+        onClick={() =>
+          requireLogin(
+            '/utaawase'
+          )
+        }
+        style={navButtonStyle(
+          isActive(
+            '/utaawase'
+          )
+            ? '#ffda79'
+            : '#aaa'
+        )}
       >
-        <span style={iconStyle}>⚔️</span>
-        <span>歌合</span>
+        <span
+          style={iconStyle}
+        >
+          ⚔️
+        </span>
+
+        <span>
+          歌合
+        </span>
       </button>
 
-      {/* 番付 */}
-      <button
-        type="button"
-        onClick={() => comingSoon('番付')}
-        style={navButtonStyle('#aaa')}
-      >
-        <span style={iconStyle}>🏆</span>
-        <span>番付</span>
-      </button>
+      {/* =====================
+          番付
+      ===================== */}
 
-      {/* 歌人録 */}
+      <Link
+        href="/ranking"
+        style={{
+          ...navLinkStyle,
+
+          color: isActive(
+            '/ranking'
+          )
+            ? '#ffda79'
+            : '#aaa',
+
+          fontWeight: isActive(
+            '/ranking'
+          )
+            ? 'bold'
+            : 'normal',
+        }}
+      >
+        <span
+          style={iconStyle}
+        >
+          🏆
+        </span>
+
+        <span>
+          番付
+        </span>
+      </Link>
+
+      {/* =====================
+          歌人録
+      ===================== */}
+
       <button
         type="button"
         onClick={() => {
-          if (!currentUserId) {
-            alert('歌人録を見るにはログインが必要です！')
-            router.push('/auth')
+          if (
+            !currentUserId
+          ) {
+            alert(
+              '歌人録を見るにはログインが必要です！'
+            )
+
+            router.push(
+              '/auth'
+            )
+
             return
           }
 
-          router.push(`/user/${currentUserId}`)
+          router.push(
+            `/user/${currentUserId}`
+          )
         }}
-        style={navButtonStyle('#aaa')}
+        style={navButtonStyle(
+          pathname.startsWith(
+            '/user/'
+          )
+            ? '#ffda79'
+            : '#aaa'
+        )}
       >
-        <span style={iconStyle}>👤</span>
-        <span>歌人録</span>
+        <span
+          style={iconStyle}
+        >
+          👤
+        </span>
+
+        <span>
+          歌人録
+        </span>
       </button>
     </nav>
   )
 }
 
+// =============================
+// アイコン
+// =============================
+
 const iconStyle = {
   fontSize: '1.15rem',
 }
 
+// =============================
+// Link用スタイル
+// =============================
+
 const navLinkStyle = {
   textDecoration: 'none',
+
   cursor: 'pointer',
+
   fontSize: '0.75rem',
+
   display: 'flex',
-  flexDirection: 'column' as const,
+
+  flexDirection:
+    'column' as const,
+
   alignItems: 'center',
+
   gap: '3px',
+
   minWidth: '55px',
+
   padding: '2px',
 }
 
-const navButtonStyle = (color: string) => ({
+// =============================
+// button用スタイル
+// =============================
+
+const navButtonStyle = (
+  color: string
+) => ({
   background: 'none',
+
   border: 'none',
+
   color,
+
   cursor: 'pointer',
+
   fontSize: '0.75rem',
+
+  fontWeight:
+    color === '#ffda79'
+      ? 'bold'
+      : 'normal',
+
   display: 'flex',
-  flexDirection: 'column' as const,
+
+  flexDirection:
+    'column' as const,
+
   alignItems: 'center',
+
   gap: '3px',
+
   minWidth: '55px',
+
   padding: '2px',
 })
