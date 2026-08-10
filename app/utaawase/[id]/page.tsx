@@ -222,6 +222,12 @@ export default function UtaawaseRoomPage() {
   ] =
     useState(false)
 
+  const [
+    nextTheme,
+    setNextTheme,
+  ] =
+    useState('')
+
   // =============================
   // 結果
   // =============================
@@ -285,6 +291,11 @@ export default function UtaawaseRoomPage() {
     setSubmitting,
   ] =
     useState(false)
+
+  // 同じラウンドで一度提出成功したら、
+  // DB再確認の遅い応答で未提出に戻さない
+  const submittedRoundRef =
+    useRef<number | null>(null)
 
   // =============================
   // 評価
@@ -533,10 +544,28 @@ export default function UtaawaseRoomPage() {
           return
         }
 
-        setSubmitted(
+        const hasSubmitted =
           Array.isArray(data) &&
-            data.length > 0
-        )
+          data.length > 0
+
+        if (hasSubmitted) {
+          submittedRoundRef.current =
+            room.round_number
+
+          setSubmitted(true)
+          return
+        }
+
+        // このラウンドで提出成功済みなら、
+        // 古い確認結果で false に戻さない
+        if (
+          submittedRoundRef.current ===
+          room.round_number
+        ) {
+          return
+        }
+
+        setSubmitted(false)
       },
       [
         roomId,
@@ -758,12 +787,14 @@ export default function UtaawaseRoomPage() {
     setSecondLine('')
     setThirdLine('')
     setJoshi('')
+    submittedRoundRef.current = null
     setSubmitted(false)
     setRatingEntry(null)
     setSelectedScore(null)
     setRatingComplete(false)
     setResults([])
     setResultsError('')
+    setNextTheme('')
 
     // 新しいラウンドでは、まだ結果未取得の状態に戻す。
     loadedResultRoundRef.current =
@@ -1045,6 +1076,9 @@ export default function UtaawaseRoomPage() {
           return
         }
 
+        submittedRoundRef.current =
+          room?.round_number ?? null
+
         setSubmitted(
           true
         )
@@ -1157,6 +1191,19 @@ export default function UtaawaseRoomPage() {
         return
       }
 
+      const trimmedNextTheme =
+        nextTheme.trim()
+
+      if (
+        trimmedNextTheme.length >
+        30
+      ) {
+        alert(
+          'お題は30文字以内で入力してください'
+        )
+        return
+      }
+
       setRoomActionLoading(true)
 
       try {
@@ -1166,6 +1213,10 @@ export default function UtaawaseRoomPage() {
             {
               p_room_id:
                 roomId,
+
+              p_theme:
+                trimmedNextTheme ||
+                null,
             }
           )
 
@@ -1177,6 +1228,7 @@ export default function UtaawaseRoomPage() {
           return
         }
 
+        setNextTheme('')
         setIsFinished(false)
         await loadRoom()
       } finally {
@@ -1987,30 +2039,166 @@ export default function UtaawaseRoomPage() {
                   {isHost ? (
                     <>
                       {!sessionExpired && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            void handleNextPublicRound()
-                          }}
-                          disabled={roomActionLoading}
-                          style={{
-                            width: '100%',
-                            padding: '13px',
-                            border: 'none',
-                            borderRadius: '10px',
-                            backgroundColor: '#ffda79',
-                            color: '#121212',
-                            fontWeight: 'bold',
-                            cursor: roomActionLoading
-                              ? 'not-allowed'
-                              : 'pointer',
-                            opacity: roomActionLoading
-                              ? 0.55
-                              : 1,
-                          }}
-                        >
-                          ⚔️ 次の歌合へ
-                        </button>
+                        <>
+                          <div
+                            style={{
+                              textAlign:
+                                'left',
+                              marginBottom:
+                                '14px',
+                            }}
+                          >
+                            <label
+                              style={{
+                                display:
+                                  'block',
+
+                                color:
+                                  '#aaa',
+
+                                fontSize:
+                                  '0.75rem',
+
+                                fontWeight:
+                                  'bold',
+
+                                marginBottom:
+                                  '7px',
+                              }}
+                            >
+                              次のお題
+                              <span
+                                style={{
+                                  color:
+                                    '#666',
+
+                                  marginLeft:
+                                    '6px',
+
+                                  fontWeight:
+                                    'normal',
+                                }}
+                              >
+                                任意
+                              </span>
+                            </label>
+
+                            <input
+                              type="text"
+
+                              value={
+                                nextTheme
+                              }
+
+                              onChange={(
+                                event
+                              ) =>
+                                setNextTheme(
+                                  event
+                                    .target
+                                    .value
+                                )
+                              }
+
+                              maxLength={
+                                30
+                              }
+
+                              placeholder="空欄ならランダムで決まります"
+
+                              disabled={
+                                roomActionLoading
+                              }
+
+                              style={{
+                                ...inputStyle,
+                                marginTop:
+                                  0,
+                              }}
+                            />
+
+                            <div
+                              style={{
+                                display:
+                                  'flex',
+
+                                justifyContent:
+                                  'space-between',
+
+                                alignItems:
+                                  'center',
+
+                                gap:
+                                  '10px',
+
+                                marginTop:
+                                  '6px',
+                              }}
+                            >
+                              <span
+                                style={{
+                                  color:
+                                    '#666',
+
+                                  fontSize:
+                                    '0.68rem',
+
+                                  lineHeight:
+                                    '1.5',
+                                }}
+                              >
+                                入力したお題は、
+                                次戦開始と同時に
+                                全員へ公開されます。
+                              </span>
+
+                              <span
+                                style={{
+                                  color:
+                                    '#555',
+
+                                  fontSize:
+                                    '0.62rem',
+
+                                  flexShrink:
+                                    0,
+                                }}
+                              >
+                                {
+                                  nextTheme.length
+                                }
+                                /30
+                              </span>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              void handleNextPublicRound()
+                            }}
+                            disabled={roomActionLoading}
+                            style={{
+                              width: '100%',
+                              padding: '13px',
+                              border: 'none',
+                              borderRadius: '10px',
+                              backgroundColor: '#ffda79',
+                              color: '#121212',
+                              fontWeight: 'bold',
+                              cursor: roomActionLoading
+                                ? 'not-allowed'
+                                : 'pointer',
+                              opacity: roomActionLoading
+                                ? 0.55
+                                : 1,
+                            }}
+                          >
+                            {roomActionLoading
+                              ? '次の歌合を始めています…'
+                              : '⚔️ 次の歌合へ'}
+                          </button>
+                        </>
                       )}
 
                       {sessionExpired && (

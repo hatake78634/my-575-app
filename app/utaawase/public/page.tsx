@@ -21,6 +21,7 @@ import {
 
 type PublicRoom = {
   room_id: string
+  room_name: string | null
   host_user_id: string
   host_username: string
   current_players: number
@@ -58,6 +59,12 @@ export default function PublicUtaawasePage() {
 
   const [creating, setCreating] =
     useState(false)
+
+  const [roomName, setRoomName] =
+    useState('')
+
+  const [theme, setTheme] =
+    useState('')
 
   const [joiningRoomId, setJoiningRoomId] =
     useState<string | null>(null)
@@ -339,6 +346,30 @@ export default function PublicUtaawasePage() {
         return
       }
 
+      const trimmedRoomName =
+        roomName.trim()
+
+      if (!trimmedRoomName) {
+        setError(
+          '歌合の名前を入力してください'
+        )
+        return
+      }
+
+      if (trimmedRoomName.length > 30) {
+        setError(
+          '歌合の名前は30文字以内で入力してください'
+        )
+        return
+      }
+
+      if (theme.trim().length > 30) {
+        setError(
+          'お題は30文字以内で入力してください'
+        )
+        return
+      }
+
       try {
         setCreating(true)
         setError(null)
@@ -348,7 +379,14 @@ export default function PublicUtaawasePage() {
           error,
         } =
           await supabase.rpc(
-            'create_public_utaawase_room'
+            'create_public_utaawase_room',
+            {
+              p_room_name:
+                roomName.trim(),
+
+              p_theme:
+                theme.trim() || null,
+            }
           )
 
         if (error) {
@@ -713,74 +751,207 @@ export default function PublicUtaawasePage() {
             部屋を作る
         ===================== */}
 
-        <button
-          type="button"
-
-          onClick={
-            handleCreateRoom
-          }
-
-          disabled={
-            creating ||
-            (
-              profile
-                ?.utaawase_tickets ??
-              0
-            ) < 1
-          }
-
+        <section
           style={{
-            ...primaryButtonStyle,
-
-            opacity:
-              creating ||
-              (
-                profile
-                  ?.utaawase_tickets ??
-                0
-              ) < 1
-                ? 0.5
-                : 1,
-
-            cursor:
-              creating ||
-              (
-                profile
-                  ?.utaawase_tickets ??
-                0
-              ) < 1
-                ? 'not-allowed'
-                : 'pointer',
+            ...cardStyle,
+            marginBottom:
+              '8px',
           }}
         >
-          {creating
-            ? '歌合を準備しています…'
-            : '⚔️ 公開歌合を催す'}
-        </button>
+          <div
+            style={{
+              fontWeight:
+                'bold',
+              marginBottom:
+                '14px',
+            }}
+          >
+            ⚔️ 公開歌合を催す
+          </div>
 
-        {(
-          profile
-            ?.utaawase_tickets ??
-          0
-        ) < 1 && (
+          <label
+            style={
+              labelStyle
+            }
+          >
+            歌合の名前
+            <span
+              style={{
+                color:
+                  '#d8b95f',
+                marginLeft:
+                  '5px',
+                fontSize:
+                  '0.65rem',
+              }}
+            >
+              必須
+            </span>
+          </label>
+
+          <input
+            type="text"
+            value={roomName}
+            onChange={(event) =>
+              setRoomName(
+                event.target.value
+              )
+            }
+            maxLength={30}
+            placeholder="例：月夜の歌合"
+            disabled={creating}
+            style={
+              inputStyle
+            }
+          />
+
+          <div
+            style={
+              countStyle
+            }
+          >
+            {roomName.length} / 30
+          </div>
+
+          <label
+            style={{
+              ...labelStyle,
+              marginTop:
+                '14px',
+            }}
+          >
+            お題
+            <span
+              style={{
+                color:
+                  '#777',
+                marginLeft:
+                  '5px',
+                fontSize:
+                  '0.65rem',
+              }}
+            >
+              任意
+            </span>
+          </label>
+
+          <input
+            type="text"
+            value={theme}
+            onChange={(event) =>
+              setTheme(
+                event.target.value
+              )
+            }
+            maxLength={30}
+            placeholder="空欄ならランダムで決まります"
+            disabled={creating}
+            style={
+              inputStyle
+            }
+          />
+
+          <div
+            style={
+              countStyle
+            }
+          >
+            {theme.length} / 30
+          </div>
+
+          <button
+            type="button"
+            onClick={
+              handleCreateRoom
+            }
+            disabled={
+              creating ||
+              roomName.trim().length ===
+                0 ||
+              (
+                profile
+                  ?.utaawase_tickets ??
+                0
+              ) < 1
+            }
+            style={{
+              ...primaryButtonStyle,
+              marginTop:
+                '18px',
+
+              opacity:
+                creating ||
+                roomName.trim().length ===
+                  0 ||
+                (
+                  profile
+                    ?.utaawase_tickets ??
+                  0
+                ) < 1
+                  ? 0.5
+                  : 1,
+
+              cursor:
+                creating ||
+                roomName.trim().length ===
+                  0 ||
+                (
+                  profile
+                    ?.utaawase_tickets ??
+                  0
+                ) < 1
+                  ? 'not-allowed'
+                  : 'pointer',
+            }}
+          >
+            {creating
+              ? '歌合を準備しています…'
+              : '⚔️ この歌合を催す'}
+          </button>
+
+          {(
+            profile
+              ?.utaawase_tickets ??
+            0
+          ) < 1 && (
+            <div
+              style={{
+                color:
+                  '#777',
+
+                textAlign:
+                  'center',
+
+                fontSize:
+                  '0.72rem',
+
+                marginTop:
+                  '8px',
+              }}
+            >
+              歌合チケットがありません
+            </div>
+          )}
+
           <div
             style={{
               color:
-                '#777',
-
+                '#666',
               textAlign:
                 'center',
-
               fontSize:
-                '0.72rem',
-
+                '0.68rem',
+              lineHeight:
+                '1.7',
               marginTop:
-                '8px',
+                '10px',
             }}
           >
-            歌合チケットがありません
+            お題を空欄にすると、
+            登録済みのお題から
+            ランダムで選ばれます。
           </div>
-        )}
+        </section>
 
 
         {/* =====================
@@ -969,32 +1140,37 @@ export default function PublicUtaawasePage() {
                       <div>
                         <div
                           style={{
+                            fontWeight:
+                              'bold',
+
+                            fontSize:
+                              '1.05rem',
+
+                            lineHeight:
+                              '1.5',
+                          }}
+                        >
+                          {room.room_name ||
+                            `${room.host_username}さんの歌合`}
+                        </div>
+
+                        <div
+                          style={{
                             color:
                               '#777',
 
                             fontSize:
                               '0.68rem',
 
-                            marginBottom:
-                              '5px',
+                            marginTop:
+                              '6px',
                           }}
                         >
-                          主催
-                        </div>
-
-                        <div
-                          style={{
-                            fontWeight:
-                              'bold',
-
-                            fontSize:
-                              '1rem',
-                          }}
-                        >
+                          主催：
                           {
                             room.host_username
                           }
-                          さんの歌合
+                          さん
                         </div>
 
                         {isHost && (
@@ -1503,6 +1679,67 @@ const refreshButtonStyle = {
 
   fontSize:
     '0.7rem',
+}
+
+
+const labelStyle = {
+  display:
+    'block',
+
+  color:
+    '#aaa',
+
+  fontSize:
+    '0.75rem',
+
+  fontWeight:
+    'bold',
+}
+
+const inputStyle = {
+  width:
+    '100%',
+
+  marginTop:
+    '7px',
+
+  padding:
+    '12px 13px',
+
+  border:
+    '1px solid #3a3a3a',
+
+  borderRadius:
+    '10px',
+
+  backgroundColor:
+    '#151515',
+
+  color:
+    '#fff',
+
+  fontSize:
+    '0.86rem',
+
+  outline:
+    'none',
+
+  boxSizing:
+    'border-box' as const,
+}
+
+const countStyle = {
+  color:
+    '#555',
+
+  textAlign:
+    'right' as const,
+
+  fontSize:
+    '0.62rem',
+
+  marginTop:
+    '4px',
 }
 
 const errorStyle = {
