@@ -1470,143 +1470,45 @@ export default function Home() {
       return
     }
 
-    const isAlreadyLiked =
-      userLikes[
-        haikuId
-      ] ??
-      false
-
     try {
-      // -------------------------
-      // 雅を取り消す
-      // -------------------------
-
-      if (
-        isAlreadyLiked
-      ) {
-        const {
-          error,
-        } = await supabase
-          .from('likes_2')
-          .delete()
-          .eq(
-            'haiku_id',
-            String(
-              haikuId
-            )
-          )
-          .eq(
-            'user_id',
-            userId
-          )
-
-        if (
-          error
-        ) {
-          console.error(
-            '雅取り消しエラー:',
-            error
-          )
-
-          alert(
-            '雅の取り消しに失敗しました'
-          )
-
-          return
-        }
-
-        setUserLikes(
-          (prev) => ({
-            ...prev,
-            [haikuId]:
-              false,
-          })
-        )
-
-        setLikeCounts(
-          (prev) => ({
-            ...prev,
-            [haikuId]:
-              Math.max(
-                (
-                  prev[
-                    haikuId
-                  ] ??
-                  1
-                ) -
-                  1,
-                0
-              ),
-          })
-        )
-
-        setLikeRows(
-          (prev) =>
-            prev.filter(
-              (like) =>
-                !(
-                  String(
-                    like.haiku_id
-                  ) ===
-                    String(
-                      haikuId
-                    ) &&
-                  like.user_id ===
-                    userId
-                )
-            )
-        )
-
-        return
-      }
-
-      // -------------------------
-      // 雅を追加
-      // -------------------------
-
-      const now =
-        new Date()
-          .toISOString()
-
       const {
+        data,
         error,
-      } = await supabase
-        .from('likes_2')
-        .insert([
+      } =
+        await supabase.rpc(
+          'toggle_haiku_like_with_notification',
           {
-            haiku_id:
-              String(
+            p_haiku_id:
+              Number(
                 haikuId
               ),
+          }
+        )
 
-            user_id:
-              userId,
-
-            created_at:
-              now,
-          },
-        ])
-
-      if (
-        error
-      ) {
+      if (error) {
         console.error(
-          '雅エラー:',
+          '雅処理エラー:',
           error
         )
 
         alert(
-          '雅を贈れませんでした'
+          error.message ||
+            '雅を変更できませんでした'
         )
 
         return
       }
+
+      const nowLiked =
+        Boolean(
+          data
+        )
 
       setUserLikes(
         (prev) => ({
           ...prev,
           [haikuId]:
-            true,
+            nowLiked,
         })
       )
 
@@ -1614,37 +1516,65 @@ export default function Home() {
         (prev) => ({
           ...prev,
           [haikuId]:
-            (
-              prev[
-                haikuId
-              ] ??
-              0
-            ) +
-            1,
+            nowLiked
+              ? (
+                  prev[
+                    haikuId
+                  ] ??
+                  0
+                ) + 1
+              : Math.max(
+                  (
+                    prev[
+                      haikuId
+                    ] ??
+                    1
+                  ) - 1,
+                  0
+                ),
         })
       )
 
       setLikeRows(
-        (prev) => [
-          ...prev,
-          {
-            haiku_id:
-              String(
-                haikuId
-              ),
+        (prev) => {
+          if (nowLiked) {
+            return [
+              ...prev,
+              {
+                haiku_id:
+                  haikuId,
+                user_id:
+                  userId,
+                created_at:
+                  new Date()
+                    .toISOString(),
+              },
+            ]
+          }
 
-            user_id:
-              userId,
-
-            created_at:
-              now,
-          },
-        ]
+          return prev.filter(
+            (like) =>
+              !(
+                String(
+                  like.haiku_id
+                ) ===
+                  String(
+                    haikuId
+                  ) &&
+                like.user_id ===
+                  userId
+              )
+          )
+        }
       )
     } catch (error) {
       console.error(
         '雅処理エラー:',
         error
+      )
+
+      alert(
+        '雅の変更中にエラーが発生しました'
       )
     }
   }

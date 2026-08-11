@@ -823,9 +823,9 @@ const handlePublicRoom =
             }}
           >
             ShiKaの歌人なら誰でも参加できる
-            公開歌合を催します。
+            公開歌合です。
             <br />
-            開催にはチケットを使用します。
+            参加、または新しく開催できます。
           </div>
 
           <button
@@ -839,7 +839,7 @@ const handlePublicRoom =
               secondaryButton
             }
           >
-            🎟️ 公開歌合を催す
+            🌐 公開歌合に参加・開催する
           </button>
         </section>
 

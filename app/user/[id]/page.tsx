@@ -701,98 +701,62 @@ export default function UserPage() {
       }
 
       try {
+        const {
+          data,
+          error,
+        } =
+          await supabase.rpc(
+            'toggle_follow_with_notifications',
+            {
+              p_target_user_id:
+                userId,
+            }
+          )
+
         if (
-          isFollowing
+          error
         ) {
-          // -------------------------
-          // 贔屓解除
-          // -------------------------
-
-          const {
-            error,
-          } = await supabase
-            .from(
-              'follows'
-            )
-            .delete()
-            .eq(
-              'follower_id',
-              currentUserId
-            )
-            .eq(
-              'following_id',
-              userId
-            )
-
-          if (
+          console.error(
+            '贔屓処理エラー:',
             error
-          ) {
-            console.error(
-              '贔屓解除エラー:',
-              error
-            )
-
-            return
-          }
-
-          setIsFollowing(
-            false
           )
 
-          setFollowerCount(
-            (prev) =>
-              Math.max(
-                prev - 1,
-                0
-              )
-          )
-        } else {
-          // -------------------------
-          // 贔屓追加
-          // -------------------------
-
-          const {
-            error,
-          } = await supabase
-            .from(
-              'follows'
-            )
-            .insert([
-              {
-                follower_id:
-                  currentUserId,
-
-                following_id:
-                  userId,
-              },
-            ])
-
-          if (
-            error
-          ) {
-            console.error(
-              '贔屓追加エラー:',
-              error
-            )
-
-            return
-          }
-
-          setIsFollowing(
-            true
+          alert(
+            error.message ||
+              '贔屓の変更に失敗しました'
           )
 
-          setFollowerCount(
-            (prev) =>
-              prev + 1
-          )
+          return
         }
+
+        const nowFollowing =
+          Boolean(
+            data
+          )
+
+        setIsFollowing(
+          nowFollowing
+        )
+
+        setFollowerCount(
+          (prev) =>
+            nowFollowing
+              ? prev + 1
+              : Math.max(
+                  prev - 1,
+                  0
+                )
+        )
 
         await fetchUserData()
       } catch (error) {
         console.error(
           '贔屓処理エラー:',
           error
+        )
+
+        alert(
+          '贔屓の変更中にエラーが発生しました'
         )
       }
     }
@@ -819,132 +783,80 @@ export default function UserPage() {
         return
       }
 
-      const isAlreadyLiked =
-        userLikes[
-          haikuId
-        ] ??
-        false
-
       try {
-        if (
-          isAlreadyLiked
-        ) {
-          const {
-            error,
-          } = await supabase
-            .from(
-              'likes_2'
-            )
-            .delete()
-            .eq(
-              'haiku_id',
-              String(
-                haikuId
-              )
-            )
-            .eq(
-              'user_id',
-              currentUserId
-            )
-
-          if (
-            error
-          ) {
-            console.error(
-              '雅取り消しエラー:',
-              error
-            )
-
-            return
-          }
-
-          setUserLikes(
-            (prev) => ({
-              ...prev,
-
-              [haikuId]:
-                false,
-            })
+        const {
+          data,
+          error,
+        } =
+          await supabase.rpc(
+            'toggle_haiku_like_with_notification',
+            {
+              p_haiku_id:
+                Number(
+                  haikuId
+                ),
+            }
           )
 
-          setLikeCounts(
-            (prev) => ({
-              ...prev,
+        if (
+          error
+        ) {
+          console.error(
+            '雅処理エラー:',
+            error
+          )
 
-              [haikuId]:
-                Math.max(
-                  (
+          alert(
+            error.message ||
+              '雅を変更できませんでした'
+          )
+
+          return
+        }
+
+        const nowLiked =
+          Boolean(
+            data
+          )
+
+        setUserLikes(
+          (prev) => ({
+            ...prev,
+            [haikuId]:
+              nowLiked,
+          })
+        )
+
+        setLikeCounts(
+          (prev) => ({
+            ...prev,
+            [haikuId]:
+              nowLiked
+                ? (
                     prev[
                       haikuId
-                    ] ?? 1
-                  ) - 1,
-                  0
-                ),
-            })
-          )
-        } else {
-          const now =
-            new Date()
-              .toISOString()
-
-          const {
-            error,
-          } = await supabase
-            .from(
-              'likes_2'
-            )
-            .insert([
-              {
-                haiku_id:
-                  String(
-                    haikuId
+                    ] ??
+                    0
+                  ) + 1
+                : Math.max(
+                    (
+                      prev[
+                        haikuId
+                      ] ??
+                      1
+                    ) - 1,
+                    0
                   ),
-
-                user_id:
-                  currentUserId,
-
-                created_at:
-                  now,
-              },
-            ])
-
-          if (
-            error
-          ) {
-            console.error(
-              '雅エラー:',
-              error
-            )
-
-            return
-          }
-
-          setUserLikes(
-            (prev) => ({
-              ...prev,
-
-              [haikuId]:
-                true,
-            })
-          )
-
-          setLikeCounts(
-            (prev) => ({
-              ...prev,
-
-              [haikuId]:
-                (
-                  prev[
-                    haikuId
-                  ] ?? 0
-                ) + 1,
-            })
-          )
-        }
+          })
+        )
       } catch (error) {
         console.error(
           '雅処理エラー:',
           error
+        )
+
+        alert(
+          '雅の変更中にエラーが発生しました'
         )
       }
     }
