@@ -22,6 +22,7 @@ import {
 
 type LobbyMember = {
   room_id: string
+  room_name: string | null
   room_status: string
 
   host_user_id: string
@@ -575,9 +576,15 @@ export default function PublicUtaawaseLobbyPage() {
 
               letterSpacing:
                 '0.08em',
+
+              lineHeight:
+                '1.5',
             }}
           >
-            ⚔️ 公開歌合
+            ⚔️ {
+              lobby.room_name ||
+              '公開歌合'
+            }
           </h1>
 
           <div
