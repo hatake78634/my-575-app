@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
@@ -57,6 +58,60 @@ export default function HaikuCard({
   currentUserId,
 }: HaikuCardProps) {
   const router = useRouter()
+
+  const battleEndMs =
+    haiku.battle_ends_at
+      ? new Date(
+          haiku.battle_ends_at
+        ).getTime()
+      : null
+
+  const [nowMs, setNowMs] =
+    useState<number | null>(null)
+
+  useEffect(() => {
+    if (
+      haiku.battle_resolved ||
+      battleEndMs === null ||
+      !Number.isFinite(battleEndMs)
+    ) {
+      return
+    }
+
+    let intervalId:
+      | number
+      | null = null
+
+    const frameId =
+      window.requestAnimationFrame(
+        () => {
+          setNowMs(Date.now())
+
+          intervalId =
+            window.setInterval(
+              () => {
+                setNowMs(Date.now())
+              },
+              60 * 1000
+            )
+        }
+      )
+
+    return () => {
+      window.cancelAnimationFrame(
+        frameId
+      )
+
+      if (intervalId !== null) {
+        window.clearInterval(
+          intervalId
+        )
+      }
+    }
+  }, [
+    battleEndMs,
+    haiku.battle_resolved,
+  ])
 
   // =============================
   // 投稿日時
@@ -159,21 +214,17 @@ export default function HaikuCard({
   const getBattleRemaining =
     () => {
       if (
-        !haiku.battle_ends_at
+        battleEndMs === null ||
+        !Number.isFinite(
+          battleEndMs
+        ) ||
+        nowMs === null
       ) {
         return ''
       }
 
-      const endTime =
-        new Date(
-          haiku.battle_ends_at
-        ).getTime()
-
-      const now =
-        Date.now()
-
       const diff =
-        endTime - now
+        battleEndMs - nowMs
 
       if (
         diff <= 0
@@ -489,11 +540,10 @@ export default function HaikuCard({
           {/* 評価中 */}
 
           {!haiku.battle_resolved &&
-            haiku.battle_ends_at &&
-            new Date(
-              haiku.battle_ends_at
-            ).getTime() >
-              Date.now() && (
+            battleEndMs !== null &&
+            nowMs !== null &&
+            battleEndMs >
+              nowMs && (
               <>
                 <div
                   style={{
@@ -537,11 +587,10 @@ export default function HaikuCard({
           {/* 48時間終了・未判定 */}
 
           {!haiku.battle_resolved &&
-            haiku.battle_ends_at &&
-            new Date(
-              haiku.battle_ends_at
-            ).getTime() <=
-              Date.now() && (
+            battleEndMs !== null &&
+            nowMs !== null &&
+            battleEndMs <=
+              nowMs && (
               <>
                 <div
                   style={{
