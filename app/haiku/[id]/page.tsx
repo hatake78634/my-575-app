@@ -89,8 +89,8 @@ export default function HaikuDetail() {
 
       if (authUserId) {
         const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
+          .from('profiles_3')
+          .select('username, avatar_url')
           .eq('id', authUserId)
           .maybeSingle()
 

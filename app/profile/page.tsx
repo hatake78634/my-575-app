@@ -34,8 +34,8 @@ export default function ProfilePage() {
       setUserId(user.id)
 
       const { data, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
+        .from('profiles_3')
+        .select('username, bio, avatar_url')
         .eq('id', user.id)
         .maybeSingle()
 
@@ -65,7 +65,8 @@ export default function ProfilePage() {
     e.preventDefault()
     if (!userId) return
 
-    const { error } = await supabase.from('profiles').upsert({
+    // rating / utaawase_tickets / created_at は更新しない
+    const { error } = await supabase.from('profiles_3').upsert({
       id: userId,
       username,
       bio,
