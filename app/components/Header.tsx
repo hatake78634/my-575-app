@@ -22,12 +22,19 @@ export default function Header({
 }: HeaderProps) {
   const router = useRouter()
 
-  const [unreadCount, setUnreadCount] =
-    useState(0)
+  const [unreadState, setUnreadState] =
+    useState<{
+      userId: string
+      count: number
+    } | null>(null)
+
+  const unreadCount =
+    unreadState?.userId === userId
+      ? unreadState.count
+      : 0
 
   useEffect(() => {
     if (!userId) {
-      setUnreadCount(0)
       return
     }
 
@@ -53,11 +60,12 @@ export default function Header({
             ? data
             : Number(data ?? 0)
 
-        setUnreadCount(
-          Number.isFinite(count)
+        setUnreadState({
+          userId,
+          count: Number.isFinite(count)
             ? count
-            : 0
-        )
+            : 0,
+        })
       }
     }
 
