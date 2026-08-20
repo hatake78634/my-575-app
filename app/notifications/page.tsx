@@ -1,8 +1,10 @@
 'use client'
 
 import {
+  useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 
@@ -69,6 +71,18 @@ type NotificationRow = {
     string
 }
 
+type NotificationLoadData = {
+  status: 'success' | 'error'
+  notifications: NotificationRow[]
+  errorText: string
+}
+
+type NotificationLoadResult =
+  NotificationLoadData & {
+    requestId: number
+    targetUserId: string
+  }
+
 
 export default function NotificationsPage() {
   const router =
@@ -114,78 +128,166 @@ export default function NotificationsPage() {
       null
     )
 
+  const notificationRequestIdRef =
+    useRef(0)
+
+  const notificationRequestsRef =
+    useRef<
+      Map<
+        string,
+        Promise<NotificationLoadData>
+      >
+    >(new Map())
+
+  const [
+    loadedNotificationsUserId,
+    setLoadedNotificationsUserId,
+  ] = useState<
+    string | null | undefined
+  >(undefined)
+
+  const notificationsLoading =
+    loading ||
+    loadedNotificationsUserId !== userId
+
 
   // =============================
   // 通知取得
   // =============================
 
   const loadNotifications =
-    async () => {
-      if (!userId) {
+    useCallback(async (
+      targetUserId: string
+    ): Promise<NotificationLoadResult> => {
+      const requestId =
+        ++notificationRequestIdRef.current
+
+      let request =
+        notificationRequestsRef.current.get(
+          targetUserId
+        )
+
+      if (!request) {
+        request = (async () => {
+          try {
+            const {
+              data,
+              error,
+            } =
+              await supabase.rpc(
+                'get_my_notifications'
+              )
+
+            if (error) {
+              console.error(
+                '通知取得エラー:',
+                error
+              )
+
+              return {
+                status: 'error',
+                notifications: [],
+                errorText:
+                  error.message ||
+                  '通知を取得できませんでした',
+              }
+            }
+
+            const notifications =
+              Array.isArray(data)
+                ? (
+                    data as NotificationRow[]
+                  )
+                : []
+
+            const {
+              error:
+                readError,
+            } =
+              await supabase.rpc(
+                'mark_my_notifications_read'
+              )
+
+            if (readError) {
+              console.error(
+                '通知既読エラー:',
+                readError
+              )
+            }
+
+            return {
+              status: 'success',
+              notifications,
+              errorText: '',
+            }
+          } catch (error) {
+            console.error(
+              '通知取得処理エラー:',
+              error
+            )
+
+            return {
+              status: 'error',
+              notifications: [],
+              errorText:
+                '通知を取得できませんでした',
+            }
+          }
+        })()
+
+        notificationRequestsRef.current.set(
+          targetUserId,
+          request
+        )
+      }
+
+      try {
+        const data = await request
+
+        return {
+          ...data,
+          requestId,
+          targetUserId,
+        }
+      } finally {
+        if (
+          notificationRequestsRef.current.get(
+            targetUserId
+          ) === request
+        ) {
+          notificationRequestsRef.current.delete(
+            targetUserId
+          )
+        }
+      }
+    }, [])
+
+  const applyNotificationLoadResult =
+    useCallback((
+      result: NotificationLoadResult
+    ) => {
+      if (
+        result.requestId !==
+        notificationRequestIdRef.current
+      ) {
         return
       }
 
-      setLoading(true)
-      setErrorText('')
-
-      try {
-        const {
-          data,
-          error,
-        } =
-          await supabase.rpc(
-            'get_my_notifications'
-          )
-
-        if (error) {
-          console.error(
-            '通知取得エラー:',
-            error
-          )
-
-          setErrorText(
-            error.message ||
-              '通知を取得できませんでした'
-          )
-
-          return
-        }
-
+      if (result.status === 'success') {
         setNotifications(
-          Array.isArray(data)
-            ? (
-                data as NotificationRow[]
-              )
-            : []
+          result.notifications
         )
-
-        const {
-          error:
-            readError,
-        } =
-          await supabase.rpc(
-            'mark_my_notifications_read'
-          )
-
-        if (readError) {
-          console.error(
-            '通知既読エラー:',
-            readError
-          )
-        }
-      } catch (error) {
-        console.error(
-          '通知取得処理エラー:',
-          error
-        )
-
-        setErrorText(
-          '通知を取得できませんでした'
-        )
-      } finally {
-        setLoading(false)
+        setErrorText('')
+      } else {
+        setNotifications([])
+        setErrorText(result.errorText)
       }
-    }
+
+      setLoadedNotificationsUserId(
+        result.targetUserId
+      )
+      setLoading(false)
+    }, [])
 
 
   // =============================
@@ -198,6 +300,8 @@ export default function NotificationsPage() {
     }
 
     if (!userId) {
+      ++notificationRequestIdRef.current
+
       router.replace(
         '/auth'
       )
@@ -205,9 +309,18 @@ export default function NotificationsPage() {
       return
     }
 
-    void loadNotifications()
+    void loadNotifications(
+      userId
+    ).then((result) => {
+      applyNotificationLoadResult(
+        result
+      )
+    })
   }, [
+    applyNotificationLoadResult,
     authLoading,
+    loadNotifications,
+    router,
     userId,
   ])
 
@@ -295,7 +408,18 @@ export default function NotificationsPage() {
           return
         }
 
-        await loadNotifications()
+        if (userId) {
+          setLoading(true)
+          setErrorText('')
+
+          await loadNotifications(
+            userId
+          ).then((result) => {
+            applyNotificationLoadResult(
+              result
+            )
+          })
+        }
       } catch (error) {
         console.error(
           '招待承諾エラー:',
@@ -352,7 +476,18 @@ export default function NotificationsPage() {
           return
         }
 
-        await loadNotifications()
+        if (userId) {
+          setLoading(true)
+          setErrorText('')
+
+          await loadNotifications(
+            userId
+          ).then((result) => {
+            applyNotificationLoadResult(
+              result
+            )
+          })
+        }
       } catch (error) {
         console.error(
           '招待辞退エラー:',
@@ -453,7 +588,7 @@ export default function NotificationsPage() {
 
   if (
     authLoading ||
-    loading
+    notificationsLoading
   ) {
     return (
       <FullScreenMessage
@@ -619,7 +754,20 @@ export default function NotificationsPage() {
               type="button"
 
               onClick={() => {
-                void loadNotifications()
+                if (!userId) {
+                  return
+                }
+
+                setLoading(true)
+                setErrorText('')
+
+                void loadNotifications(
+                  userId
+                ).then((result) => {
+                  applyNotificationLoadResult(
+                    result
+                  )
+                })
               }}
 
               style={{
