@@ -52,6 +52,17 @@ type ScoredHaiku = {
   isNewPost: boolean
 }
 
+type HaikuLoadResult = {
+  requestId: number
+  targetUserId: string | null
+  status: 'success' | 'empty' | 'error'
+  haikus: Haiku[]
+  likeRows: LikeRow[]
+  likeCounts: Record<string, number>
+  userLikes: Record<string, boolean>
+  profileCreatedAt: ProfileCreatedAt[]
+}
+
 // =============================
 // みつける設定
 // =============================
@@ -106,6 +117,20 @@ export default function Home() {
     isLoading,
     setIsLoading,
   ] = useState(true)
+
+  const haikuRequestIdRef =
+    useRef(0)
+
+  const [
+    loadedHaikusUserId,
+    setLoadedHaikusUserId,
+  ] = useState<
+    string | null | undefined
+  >(undefined)
+
+  const timelineLoading =
+    isLoading ||
+    loadedHaikusUserId !== userId
 
   // =============================
   // 歌人情報
@@ -497,8 +522,11 @@ export default function Home() {
   // 俳句・札・雅・プロフィール
   // =============================
 
-  const loadHaikus = async () => {
-    setIsLoading(true)
+  const loadHaikus = useCallback(async (
+    targetUserId: string | null
+  ): Promise<HaikuLoadResult> => {
+    const requestId =
+      ++haikuRequestIdRef.current
 
     try {
       // -------------------------
@@ -527,8 +555,16 @@ export default function Home() {
           haikuError
         )
 
-        setHaikus([])
-        return
+        return {
+          requestId,
+          targetUserId,
+          status: 'empty',
+          haikus: [],
+          likeRows: [],
+          likeCounts: {},
+          userLikes: {},
+          profileCreatedAt: [],
+        }
       }
 
       const loadedHaikus =
@@ -659,10 +695,6 @@ export default function Home() {
           }
         )
 
-      setHaikus(
-        haikusWithTags
-      )
-
       // -------------------------
       // ④ 雅
       // -------------------------
@@ -689,10 +721,6 @@ export default function Home() {
       const likes =
         (likesData ??
           []) as LikeRow[]
-
-      setLikeRows(
-        likes
-      )
 
       const counts: {
         [key: string]:
@@ -723,7 +751,7 @@ export default function Home() {
             haikuLikes.length
 
           if (
-            userId
+            targetUserId
           ) {
             myLikes[
               haiku.id
@@ -731,18 +759,10 @@ export default function Home() {
               haikuLikes.some(
                 (like) =>
                   like.user_id ===
-                  userId
+                  targetUserId
               )
           }
         }
-      )
-
-      setLikeCounts(
-        counts
-      )
-
-      setUserLikes(
-        myLikes
       )
 
       // -------------------------
@@ -769,21 +789,73 @@ export default function Home() {
         )
       }
 
-      setProfileCreatedAt(
-        (profileData ??
-          []) as ProfileCreatedAt[]
-      )
+      return {
+        requestId,
+        targetUserId,
+        status: 'success',
+        haikus: haikusWithTags,
+        likeRows: likes,
+        likeCounts: counts,
+        userLikes: myLikes,
+        profileCreatedAt:
+          (profileData ??
+            []) as ProfileCreatedAt[],
+      }
     } catch (error) {
       console.error(
         'データ取得エラー:',
         error
       )
-    } finally {
-      setIsLoading(
-        false
-      )
+
+      return {
+        requestId,
+        targetUserId,
+        status: 'error',
+        haikus: [],
+        likeRows: [],
+        likeCounts: {},
+        userLikes: {},
+        profileCreatedAt: [],
+      }
     }
-  }
+  }, [])
+
+  const applyHaikuLoadResult =
+    useCallback((
+      result: HaikuLoadResult
+    ) => {
+      if (
+        result.requestId !==
+        haikuRequestIdRef.current
+      ) {
+        return
+      }
+
+      if (
+        result.status ===
+        'success'
+      ) {
+        setHaikus(result.haikus)
+        setLikeRows(result.likeRows)
+        setLikeCounts(result.likeCounts)
+        setUserLikes(result.userLikes)
+        setProfileCreatedAt(
+          result.profileCreatedAt
+        )
+      } else if (
+        result.status ===
+        'empty'
+      ) {
+        setHaikus([])
+      } else {
+        setUserLikes({})
+      }
+
+      setLoadedHaikusUserId(
+        result.targetUserId
+      )
+      setIsLoading(false)
+    }, [])
 
   // =============================
   // 贔屓
@@ -883,7 +955,11 @@ export default function Home() {
       return
     }
 
-    void loadHaikus()
+    void loadHaikus(
+      userId
+    ).then((result) => {
+      applyHaikuLoadResult(result)
+    })
 
     void loadCompetitiveStatus()
 
@@ -908,8 +984,10 @@ export default function Home() {
         null
     }
   }, [
+    applyHaikuLoadResult,
     authLoading,
     loadFavoriteUsers,
+    loadHaikus,
     userId,
   ])
 
@@ -2067,8 +2145,19 @@ export default function Home() {
       'new'
     )
 
+    setIsLoading(true)
+
+    const haikuReload =
+      loadHaikus(userId).then(
+        (result) => {
+          applyHaikuLoadResult(
+            result
+          )
+        }
+      )
+
     await Promise.all([
-      loadHaikus(),
+      haikuReload,
       loadCompetitiveStatus(),
     ])
   }
@@ -2197,7 +2286,7 @@ export default function Home() {
   const renderTimeline =
     () => {
       if (
-        isLoading ||
+        timelineLoading ||
         authLoading ||
         nowMs === null
       ) {
