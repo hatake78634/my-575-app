@@ -181,19 +181,57 @@ export default function Home() {
     setIsModalOpen,
   ] = useState(false)
 
+  const [nowMs, setNowMs] =
+    useState<number | null>(null)
+
+  useEffect(() => {
+    let intervalId:
+      | number
+      | null = null
+
+    const frameId =
+      window.requestAnimationFrame(
+        () => {
+          setNowMs(Date.now())
+
+          intervalId =
+            window.setInterval(
+              () => {
+                setNowMs(Date.now())
+              },
+              60 * 1000
+            )
+        }
+      )
+
+    return () => {
+      window.cancelAnimationFrame(
+        frameId
+      )
+
+      if (intervalId !== null) {
+        window.clearInterval(
+          intervalId
+        )
+      }
+    }
+  }, [])
+
   // =============================
   // 30分固定推薦
   // =============================
 
   const discoverTimeBucket =
-    Math.floor(
-      Date.now() /
-        (
-          DISCOVER_REFRESH_MINUTES *
-          60 *
-          1000
+    nowMs === null
+      ? null
+      : Math.floor(
+          nowMs /
+            (
+              DISCOVER_REFRESH_MINUTES *
+              60 *
+              1000
+            )
         )
-    )
 
   // =============================
   // 疑似乱数
@@ -878,8 +916,11 @@ export default function Home() {
 
   const scoredHaikus =
     useMemo(() => {
-      const now =
-        Date.now()
+      if (nowMs === null) {
+        return []
+      }
+
+      const now = nowMs
 
       return haikus.map(
         (
@@ -1109,6 +1150,7 @@ export default function Home() {
       profileCreatedAt,
       userId,
       discoverTimeBucket,
+      nowMs,
     ])
 
   // =============================
@@ -2116,7 +2158,8 @@ export default function Home() {
     () => {
       if (
         isLoading ||
-        authLoading
+        authLoading ||
+        nowMs === null
       ) {
         return (
           <p
