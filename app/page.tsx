@@ -63,6 +63,20 @@ type HaikuLoadResult = {
   profileCreatedAt: ProfileCreatedAt[]
 }
 
+type CompetitiveStatusState = {
+  userId: string
+  rating: number
+  remaining: number
+}
+
+type CompetitiveStatusResult = {
+  requestId: number
+  targetUserId: string
+  status: 'success' | 'error'
+  rating: number
+  remaining: number
+}
+
 // =============================
 // みつける設定
 // =============================
@@ -80,6 +94,62 @@ const DISCOVER_REFRESH_MINUTES = 30
 const MAX_COMPETITIVE_PER_DAY = 3
 
 const COMPETITIVE_HOURS = 48
+
+const getTodayJstRange = () => {
+  const now =
+    new Date()
+
+  const jstNow =
+    new Date(
+      now.getTime() +
+        9 *
+          60 *
+          60 *
+          1000
+    )
+
+  const year =
+    jstNow.getUTCFullYear()
+
+  const month =
+    jstNow.getUTCMonth()
+
+  const day =
+    jstNow.getUTCDate()
+
+  const startMs =
+    Date.UTC(
+      year,
+      month,
+      day,
+      0,
+      0,
+      0
+    ) -
+    9 *
+      60 *
+      60 *
+      1000
+
+  const endMs =
+    startMs +
+    24 *
+      60 *
+      60 *
+      1000
+
+  return {
+    start:
+      new Date(
+        startMs
+      ).toISOString(),
+
+    end:
+      new Date(
+        endMs
+      ).toISOString(),
+  }
+}
 
 export default function Home() {
   const router = useRouter()
@@ -141,21 +211,26 @@ export default function Home() {
     setProfileCreatedAt,
   ] = useState<ProfileCreatedAt[]>([])
 
-  const [
-    currentRating,
-    setCurrentRating,
-  ] = useState(1000)
-
   // =============================
   // 勝負句
   // =============================
 
   const [
-    competitiveRemaining,
-    setCompetitiveRemaining,
-  ] = useState(
-    MAX_COMPETITIVE_PER_DAY
-  )
+    competitiveStatusState,
+    setCompetitiveStatusState,
+  ] = useState<
+    CompetitiveStatusState | null
+  >(null)
+
+  const competitiveRequestIdRef =
+    useRef(0)
+
+  const competitiveRemaining =
+    userId &&
+    competitiveStatusState?.userId ===
+      userId
+      ? competitiveStatusState.remaining
+      : MAX_COMPETITIVE_PER_DAY
 
   // =============================
   // 贔屓
@@ -344,82 +419,15 @@ export default function Home() {
   }
 
   // =============================
-  // 日本時間の今日
-  // =============================
-
-  const getTodayJstRange = () => {
-    const now =
-      new Date()
-
-    const jstNow =
-      new Date(
-        now.getTime() +
-          9 *
-            60 *
-            60 *
-            1000
-      )
-
-    const year =
-      jstNow.getUTCFullYear()
-
-    const month =
-      jstNow.getUTCMonth()
-
-    const day =
-      jstNow.getUTCDate()
-
-    const startMs =
-      Date.UTC(
-        year,
-        month,
-        day,
-        0,
-        0,
-        0
-      ) -
-      9 *
-        60 *
-        60 *
-        1000
-
-    const endMs =
-      startMs +
-      24 *
-        60 *
-        60 *
-        1000
-
-    return {
-      start:
-        new Date(
-          startMs
-        ).toISOString(),
-
-      end:
-        new Date(
-          endMs
-        ).toISOString(),
-    }
-  }
-
-  // =============================
   // rating・今日の勝負句数
   // =============================
 
   const loadCompetitiveStatus =
-    async () => {
-      if (!userId) {
-        setCurrentRating(
-          1000
-        )
-
-        setCompetitiveRemaining(
-          MAX_COMPETITIVE_PER_DAY
-        )
-
-        return
-      }
+    useCallback(async (
+      targetUserId: string
+    ): Promise<CompetitiveStatusResult> => {
+      const requestId =
+        ++competitiveRequestIdRef.current
 
       try {
         // rating
@@ -433,7 +441,7 @@ export default function Home() {
           .select('rating')
           .eq(
             'id',
-            userId
+            targetUserId
           )
           .maybeSingle()
 
@@ -452,10 +460,6 @@ export default function Home() {
             ? profile.rating
             : 1000
 
-        setCurrentRating(
-          rating
-        )
-
         // 今日の勝負句数
 
         const {
@@ -473,7 +477,7 @@ export default function Home() {
           .select('id')
           .eq(
             'user_id',
-            userId
+            targetUserId
           )
           .eq(
             'is_competitive',
@@ -496,27 +500,73 @@ export default function Home() {
             competitiveError
           )
 
-          return
+          return {
+            requestId,
+            targetUserId,
+            status: 'error',
+            rating: 1000,
+            remaining:
+              MAX_COMPETITIVE_PER_DAY,
+          }
         }
 
         const used =
           todayCompetitive?.length ??
           0
 
-        setCompetitiveRemaining(
-          Math.max(
-            MAX_COMPETITIVE_PER_DAY -
-              used,
-            0
-          )
-        )
+        return {
+          requestId,
+          targetUserId,
+          status: 'success',
+          rating,
+          remaining:
+            Math.max(
+              MAX_COMPETITIVE_PER_DAY -
+                used,
+              0
+            ),
+        }
       } catch (error) {
         console.error(
           '勝負句状態取得エラー:',
           error
         )
+
+        return {
+          requestId,
+          targetUserId,
+          status: 'error',
+          rating: 1000,
+          remaining:
+            MAX_COMPETITIVE_PER_DAY,
+        }
       }
-    }
+    }, [])
+
+  const applyCompetitiveStatusResult =
+    useCallback((
+      result: CompetitiveStatusResult
+    ) => {
+      if (
+        result.requestId !==
+        competitiveRequestIdRef.current
+      ) {
+        return
+      }
+
+      if (
+        result.status ===
+        'error'
+      ) {
+        return
+      }
+
+      setCompetitiveStatusState({
+        userId: result.targetUserId,
+        rating: result.rating,
+        remaining: result.remaining,
+      })
+    }, [])
 
   // =============================
   // 俳句・札・雅・プロフィール
@@ -961,11 +1011,17 @@ export default function Home() {
       applyHaikuLoadResult(result)
     })
 
-    void loadCompetitiveStatus()
-
     if (
       userId
     ) {
+      void loadCompetitiveStatus(
+        userId
+      ).then((result) => {
+        applyCompetitiveStatusResult(
+          result
+        )
+      })
+
       void loadFavoriteUsers(
         userId
       ).then((ids) => {
@@ -980,13 +1036,17 @@ export default function Home() {
         }
       })
     } else {
+      ++competitiveRequestIdRef.current
+
       favoriteRequestUserIdRef.current =
         null
     }
   }, [
+    applyCompetitiveStatusResult,
     applyHaikuLoadResult,
     authLoading,
     loadFavoriteUsers,
+    loadCompetitiveStatus,
     loadHaikus,
     userId,
   ])
@@ -2156,9 +2216,18 @@ export default function Home() {
         }
       )
 
+    const competitiveReload =
+      loadCompetitiveStatus(
+        userId
+      ).then((result) => {
+        applyCompetitiveStatusResult(
+          result
+        )
+      })
+
     await Promise.all([
       haikuReload,
-      loadCompetitiveStatus(),
+      competitiveReload,
     ])
   }
 
