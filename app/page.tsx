@@ -1,8 +1,10 @@
 'use client'
 
 import {
+  useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 
@@ -135,19 +137,39 @@ export default function Home() {
   // =============================
 
   const [
-    favoriteUserIds,
-    setFavoriteUserIds,
-  ] = useState<string[]>([])
+    favoriteUsersState,
+    setFavoriteUsersState,
+  ] = useState<{
+    userId: string
+    ids: string[]
+  } | null>(null)
 
-  const [
-    favoriteLoading,
-    setFavoriteLoading,
-  ] = useState(false)
+  const favoriteRequestUserIdRef =
+    useRef<string | null>(null)
 
-  const [
-    favoriteLoaded,
-    setFavoriteLoaded,
-  ] = useState(false)
+  const favoriteRequestsRef =
+    useRef<
+      Map<string, Promise<string[]>>
+    >(new Map())
+
+  const favoriteStateMatchesUser =
+    Boolean(userId) &&
+    favoriteUsersState?.userId ===
+      userId
+
+  const favoriteUserIds =
+    favoriteStateMatchesUser &&
+    favoriteUsersState
+      ? favoriteUsersState.ids
+      : []
+
+  const favoriteLoaded =
+    !userId ||
+    favoriteStateMatchesUser
+
+  const favoriteLoading =
+    Boolean(userId) &&
+    !favoriteLoaded
 
   // =============================
   // 雅
@@ -768,26 +790,22 @@ export default function Home() {
   // =============================
 
   const loadFavoriteUsers =
-    async () => {
-      if (
-        !userId
-      ) {
-        setFavoriteUserIds(
-          []
+    useCallback(async (
+      targetUserId: string
+    ) => {
+      favoriteRequestUserIdRef.current =
+        targetUserId
+
+      const existingRequest =
+        favoriteRequestsRef.current.get(
+          targetUserId
         )
 
-        setFavoriteLoaded(
-          true
-        )
-
-        return
+      if (existingRequest) {
+        return existingRequest
       }
 
-      setFavoriteLoading(
-        true
-      )
-
-      try {
+      const request = (async () => {
         const {
           data,
           error,
@@ -798,7 +816,7 @@ export default function Home() {
           )
           .eq(
             'follower_id',
-            userId
+            targetUserId
           )
 
         if (
@@ -809,14 +827,10 @@ export default function Home() {
             error
           )
 
-          setFavoriteUserIds(
-            []
-          )
-
-          return
+          return []
         }
 
-        const ids = [
+        return [
           ...new Set(
             (
               data ??
@@ -829,29 +843,34 @@ export default function Home() {
             )
           ),
         ]
-
-        setFavoriteUserIds(
-          ids
-        )
-      } catch (error) {
+      })().catch((error) => {
         console.error(
           '贔屓取得処理エラー:',
           error
         )
 
-        setFavoriteUserIds(
-          []
-        )
-      } finally {
-        setFavoriteLoading(
-          false
-        )
+        return []
+      })
 
-        setFavoriteLoaded(
-          true
-        )
+      favoriteRequestsRef.current.set(
+        targetUserId,
+        request
+      )
+
+      try {
+        return await request
+      } finally {
+        if (
+          favoriteRequestsRef.current.get(
+            targetUserId
+          ) === request
+        ) {
+          favoriteRequestsRef.current.delete(
+            targetUserId
+          )
+        }
       }
-    }
+    }, [])
 
   // =============================
   // 初回読み込み
@@ -871,18 +890,26 @@ export default function Home() {
     if (
       userId
     ) {
-      void loadFavoriteUsers()
+      void loadFavoriteUsers(
+        userId
+      ).then((ids) => {
+        if (
+          favoriteRequestUserIdRef.current ===
+          userId
+        ) {
+          setFavoriteUsersState({
+            userId,
+            ids,
+          })
+        }
+      })
     } else {
-      setFavoriteUserIds(
-        []
-      )
-
-      setFavoriteLoaded(
-        true
-      )
+      favoriteRequestUserIdRef.current =
+        null
     }
   }, [
     authLoading,
+    loadFavoriteUsers,
     userId,
   ])
 
@@ -904,9 +931,22 @@ export default function Home() {
       return
     }
 
-    void loadFavoriteUsers()
+    void loadFavoriteUsers(
+      userId
+    ).then((ids) => {
+      if (
+        favoriteRequestUserIdRef.current ===
+        userId
+      ) {
+        setFavoriteUsersState({
+          userId,
+          ids,
+        })
+      }
+    })
   }, [
     activeTab,
+    loadFavoriteUsers,
     userId,
   ])
 
