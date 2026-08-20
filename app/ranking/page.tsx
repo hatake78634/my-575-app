@@ -1,7 +1,13 @@
 'use client'
 
 import Image from 'next/image'
-import { useEffect, useMemo, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useRouter } from 'next/navigation'
 
 import { supabase } from '../../lib/supabase'
@@ -17,6 +23,13 @@ type RankingProfile = {
   username: string | null
   avatar_url: string | null
   rating: number | null
+}
+
+type RankingLoadResult = {
+  requestId: number
+  targetUserId: string | null
+  status: 'success' | 'error'
+  profiles: RankingProfile[]
 }
 
 type RankInfo = {
@@ -131,12 +144,29 @@ export default function RankingPage() {
     setLoading,
   ] = useState(true)
 
+  const rankingRequestIdRef =
+    useRef(0)
+
+  const [
+    loadedRankingUserId,
+    setLoadedRankingUserId,
+  ] = useState<
+    string | null | undefined
+  >(undefined)
+
+  const rankingLoading =
+    loading ||
+    loadedRankingUserId !== userId
+
   // =============================
   // 番付取得
   // =============================
 
-  const loadRanking = async () => {
-    setLoading(true)
+  const loadRanking = useCallback(async (
+    targetUserId: string | null
+  ): Promise<RankingLoadResult> => {
+    const requestId =
+      ++rankingRequestIdRef.current
 
     try {
       const {
@@ -160,8 +190,12 @@ export default function RankingPage() {
           error
         )
 
-        setProfiles([])
-        return
+        return {
+          requestId,
+          targetUserId,
+          status: 'error',
+          profiles: [],
+        }
       }
 
       const list =
@@ -177,16 +211,48 @@ export default function RankingPage() {
           })
         ) as RankingProfile[]
 
-      setProfiles(list)
+      return {
+        requestId,
+        targetUserId,
+        status: 'success',
+        profiles: list,
+      }
     } catch (error) {
       console.error(
         '番付取得処理エラー:',
         error
       )
-    } finally {
-      setLoading(false)
+      return {
+        requestId,
+        targetUserId,
+        status: 'error',
+        profiles: [],
+      }
     }
-  }
+  }, [])
+
+  const applyRankingResult =
+    useCallback((
+      result: RankingLoadResult
+    ) => {
+      if (
+        result.requestId !==
+        rankingRequestIdRef.current
+      ) {
+        return
+      }
+
+      if (result.status === 'success') {
+        setProfiles(result.profiles)
+      } else {
+        setProfiles([])
+      }
+
+      setLoadedRankingUserId(
+        result.targetUserId
+      )
+      setLoading(false)
+    }, [])
 
   // =============================
   // 初回取得
@@ -197,8 +263,17 @@ export default function RankingPage() {
       return
     }
 
-    void loadRanking()
-  }, [authLoading])
+    void loadRanking(
+      userId
+    ).then((result) => {
+      applyRankingResult(result)
+    })
+  }, [
+    applyRankingResult,
+    authLoading,
+    loadRanking,
+    userId,
+  ])
 
   // =============================
   // 自分
@@ -254,7 +329,7 @@ export default function RankingPage() {
   // =============================
 
   if (
-    loading ||
+    rankingLoading ||
     authLoading
   ) {
     return (
