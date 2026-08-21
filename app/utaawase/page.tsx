@@ -1,7 +1,9 @@
 'use client'
 
 import {
+  useCallback,
   useEffect,
+  useRef,
   useState,
 } from 'react'
 
@@ -22,6 +24,74 @@ import { useAuth } from '../hooks/useAuth'
 
 const MAX_COMPETITIVE_MATCHES_PER_DAY = 5
 
+type CompetitiveRemainingState = {
+  userId: string
+  remaining: number
+}
+
+type CompetitiveRemainingResult = {
+  requestId: number
+  targetUserId: string
+  status: 'success' | 'error'
+  remaining: number
+}
+
+const getTodayJstRange = () => {
+  const now =
+    new Date()
+
+  const jstNow =
+    new Date(
+      now.getTime() +
+        9 *
+          60 *
+          60 *
+          1000
+    )
+
+  const year =
+    jstNow.getUTCFullYear()
+
+  const month =
+    jstNow.getUTCMonth()
+
+  const day =
+    jstNow.getUTCDate()
+
+  const startMs =
+    Date.UTC(
+      year,
+      month,
+      day,
+      0,
+      0,
+      0
+    ) -
+    9 *
+      60 *
+      60 *
+      1000
+
+  const endMs =
+    startMs +
+    24 *
+      60 *
+      60 *
+      1000
+
+  return {
+    start:
+      new Date(
+        startMs
+      ).toISOString(),
+
+    end:
+      new Date(
+        endMs
+      ).toISOString(),
+  }
+}
+
 export default function UtaawasePage() {
   const router = useRouter()
 
@@ -40,11 +110,21 @@ export default function UtaawasePage() {
   ] = useState(false)
 
   const [
-    competitiveRemaining,
-    setCompetitiveRemaining,
-  ] = useState(
-    MAX_COMPETITIVE_MATCHES_PER_DAY
-  )
+    competitiveRemainingState,
+    setCompetitiveRemainingState,
+  ] = useState<
+    CompetitiveRemainingState | null
+  >(null)
+
+  const competitiveRequestIdRef =
+    useRef(0)
+
+  const competitiveRemaining =
+    userId &&
+    competitiveRemainingState?.userId ===
+      userId
+      ? competitiveRemainingState.remaining
+      : MAX_COMPETITIVE_MATCHES_PER_DAY
 
   // =============================
   // マッチング状態
@@ -64,71 +144,12 @@ export default function UtaawasePage() {
   // 今日の勝負モード残数
   // =============================
 
-  const getTodayJstRange = () => {
-    const now =
-      new Date()
-
-    const jstNow =
-      new Date(
-        now.getTime() +
-          9 *
-            60 *
-            60 *
-            1000
-      )
-
-    const year =
-      jstNow.getUTCFullYear()
-
-    const month =
-      jstNow.getUTCMonth()
-
-    const day =
-      jstNow.getUTCDate()
-
-    const startMs =
-      Date.UTC(
-        year,
-        month,
-        day,
-        0,
-        0,
-        0
-      ) -
-      9 *
-        60 *
-        60 *
-        1000
-
-    const endMs =
-      startMs +
-      24 *
-        60 *
-        60 *
-        1000
-
-    return {
-      start:
-        new Date(
-          startMs
-        ).toISOString(),
-
-      end:
-        new Date(
-          endMs
-        ).toISOString(),
-    }
-  }
-
   const loadCompetitiveRemaining =
-    async () => {
-      if (!userId) {
-        setCompetitiveRemaining(
-          MAX_COMPETITIVE_MATCHES_PER_DAY
-        )
-
-        return
-      }
+    useCallback(async (
+      targetUserId: string
+    ): Promise<CompetitiveRemainingResult> => {
+      const requestId =
+        ++competitiveRequestIdRef.current
 
       try {
         const {
@@ -151,7 +172,7 @@ export default function UtaawasePage() {
           `)
           .eq(
             'user_id',
-            userId
+            targetUserId
           )
           .eq(
             'is_competitive',
@@ -176,26 +197,65 @@ export default function UtaawasePage() {
             error
           )
 
-          return
+          return {
+            requestId,
+            targetUserId,
+            status: 'error',
+            remaining:
+              MAX_COMPETITIVE_MATCHES_PER_DAY,
+          }
         }
 
         const used =
           data?.length ?? 0
 
-        setCompetitiveRemaining(
-          Math.max(
-            MAX_COMPETITIVE_MATCHES_PER_DAY -
-              used,
-            0
-          )
-        )
+        return {
+          requestId,
+          targetUserId,
+          status: 'success',
+          remaining:
+            Math.max(
+              MAX_COMPETITIVE_MATCHES_PER_DAY -
+                used,
+              0
+            ),
+        }
       } catch (error) {
         console.error(
           '勝負モード状態取得エラー:',
           error
         )
+
+        return {
+          requestId,
+          targetUserId,
+          status: 'error',
+          remaining:
+            MAX_COMPETITIVE_MATCHES_PER_DAY,
+        }
       }
-    }
+    }, [])
+
+  const applyCompetitiveRemainingResult =
+    useCallback((
+      result: CompetitiveRemainingResult
+    ) => {
+      if (
+        result.requestId !==
+        competitiveRequestIdRef.current
+      ) {
+        return
+      }
+
+      if (result.status === 'error') {
+        return
+      }
+
+      setCompetitiveRemainingState({
+        userId: result.targetUserId,
+        remaining: result.remaining,
+      })
+    }, [])
 
   // =============================
   // 初回
@@ -207,12 +267,21 @@ export default function UtaawasePage() {
     }
 
     if (!userId) {
+      ++competitiveRequestIdRef.current
       return
     }
 
-    void loadCompetitiveRemaining()
+    void loadCompetitiveRemaining(
+      userId
+    ).then((result) => {
+      applyCompetitiveRemainingResult(
+        result
+      )
+    })
   }, [
+    applyCompetitiveRemainingResult,
     authLoading,
+    loadCompetitiveRemaining,
     userId,
   ])
 
