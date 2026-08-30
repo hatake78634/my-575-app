@@ -1,7 +1,12 @@
 'use client'
 
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import {
   useParams,
   useRouter,
@@ -27,6 +32,30 @@ type Profile = {
   bio: string | null
   avatar_url: string | null
   rating: number | null
+}
+
+type LoadedUserDataTarget = {
+  targetProfileId: string
+  viewerUserId: string | null
+}
+
+type UserDataLoadResult = {
+  requestId: number
+  targetProfileId: string
+  viewerUserId: string | null
+  status: 'success' | 'error'
+  profile: Profile | null
+  haikus: Haiku[]
+  followingCount: number
+  followerCount: number
+  mutualCount: number
+  isFollowing: boolean
+  likeCounts: {
+    [key: string]: number
+  }
+  userLikes: {
+    [key: string]: boolean
+  }
 }
 
 // =============================
@@ -171,17 +200,35 @@ export default function UserPage() {
     [key: string]: boolean
   }>({})
 
+  const userDataRequestIdRef =
+    useRef(0)
+
+  const [
+    loadedUserDataTarget,
+    setLoadedUserDataTarget,
+  ] = useState<
+    LoadedUserDataTarget | null
+  >(null)
+
+  const userDataLoading =
+    isLoading ||
+    loadedUserDataTarget === null ||
+    loadedUserDataTarget.targetProfileId !==
+      userId ||
+    loadedUserDataTarget.viewerUserId !==
+      currentUserId
+
   // =============================
   // データ取得
   // =============================
 
   const fetchUserData =
-    async () => {
-      if (!userId) {
-        return
-      }
-
-      setIsLoading(true)
+    useCallback(async (
+      targetProfileId: string,
+      viewerUserId: string | null
+    ): Promise<UserDataLoadResult> => {
+      const requestId =
+        ++userDataRequestIdRef.current
 
       try {
         // -------------------------
@@ -203,7 +250,7 @@ export default function UserPage() {
           )
           .eq(
             'id',
-            userId
+            targetProfileId
           )
           .maybeSingle()
 
@@ -215,11 +262,6 @@ export default function UserPage() {
             profileError
           )
         }
-
-        setProfile(
-          profileData ??
-            null
-        )
 
         // -------------------------
         // この歌人の俳句
@@ -238,7 +280,7 @@ export default function UserPage() {
           .select('*')
           .eq(
             'user_id',
-            userId
+            targetProfileId
           )
           .order(
             'created_at',
@@ -409,10 +451,6 @@ export default function UserPage() {
             )
         }
 
-        setHaikus(
-          haikusWithTags
-        )
-
         // -------------------------
         // 贔屓
         // この人 → 誰か
@@ -433,7 +471,7 @@ export default function UserPage() {
           )
           .eq(
             'follower_id',
-            userId
+            targetProfileId
           )
 
         if (
@@ -465,7 +503,7 @@ export default function UserPage() {
           )
           .eq(
             'following_id',
-            userId
+            targetProfileId
           )
 
         if (
@@ -489,14 +527,6 @@ export default function UserPage() {
               follow.follower_id
           ) ?? []
 
-        setFollowingCount(
-          followingIds.length
-        )
-
-        setFollowerCount(
-          followerIds.length
-        )
-
         // -------------------------
         // 歌友
         // -------------------------
@@ -509,19 +539,17 @@ export default function UserPage() {
               )
           )
 
-        setMutualCount(
-          mutualIds.length
-        )
-
         // -------------------------
         // ログイン中の人が
         // この歌人を贔屓しているか
         // -------------------------
 
+        let loadedIsFollowing = false
+
         if (
-          currentUserId &&
-          currentUserId !==
-            userId
+          viewerUserId &&
+          viewerUserId !==
+            targetProfileId
         ) {
           const {
             data:
@@ -536,11 +564,11 @@ export default function UserPage() {
             .select('*')
             .eq(
               'follower_id',
-              currentUserId
+              viewerUserId
             )
             .eq(
               'following_id',
-              userId
+              targetProfileId
             )
             .maybeSingle()
 
@@ -553,15 +581,10 @@ export default function UserPage() {
             )
           }
 
-          setIsFollowing(
+          loadedIsFollowing =
             Boolean(
               followData
             )
-          )
-        } else {
-          setIsFollowing(
-            false
-          )
         }
 
         // -------------------------
@@ -622,7 +645,7 @@ export default function UserPage() {
               haikuLikes.length
 
             if (
-              currentUserId
+              viewerUserId
             ) {
               myLikes[
                 haiku.id
@@ -630,30 +653,93 @@ export default function UserPage() {
                 haikuLikes.some(
                   (like) =>
                     like.user_id ===
-                    currentUserId
+                    viewerUserId
                 )
             }
           }
         )
 
-        setLikeCounts(
-          counts
-        )
-
-        setUserLikes(
-          myLikes
-        )
+        return {
+          requestId,
+          targetProfileId,
+          viewerUserId,
+          status: 'success',
+          profile:
+            profileData ?? null,
+          haikus: haikusWithTags,
+          followingCount:
+            followingIds.length,
+          followerCount:
+            followerIds.length,
+          mutualCount:
+            mutualIds.length,
+          isFollowing:
+            loadedIsFollowing,
+          likeCounts: counts,
+          userLikes: myLikes,
+        }
       } catch (error) {
         console.error(
           '歌人録取得エラー:',
           error
         )
-      } finally {
-        setIsLoading(
-          false
-        )
+
+        return {
+          requestId,
+          targetProfileId,
+          viewerUserId,
+          status: 'error',
+          profile: null,
+          haikus: [],
+          followingCount: 0,
+          followerCount: 0,
+          mutualCount: 0,
+          isFollowing: false,
+          likeCounts: {},
+          userLikes: {},
+        }
       }
-    }
+    }, [])
+
+  const applyUserDataResult =
+    useCallback((
+      result: UserDataLoadResult
+    ) => {
+      if (
+        result.requestId !==
+        userDataRequestIdRef.current
+      ) {
+        return
+      }
+
+      setProfile(result.profile)
+      setHaikus(result.haikus)
+      setFollowingCount(
+        result.followingCount
+      )
+      setFollowerCount(
+        result.followerCount
+      )
+      setMutualCount(
+        result.mutualCount
+      )
+      setIsFollowing(
+        result.isFollowing
+      )
+      setLikeCounts(
+        result.likeCounts
+      )
+      setUserLikes(
+        result.userLikes
+      )
+      setLoadedUserDataTarget({
+        targetProfileId:
+          result.targetProfileId,
+        viewerUserId:
+          result.viewerUserId,
+      })
+      setIsLoading(false)
+    }, [])
 
   // =============================
   // 初回取得
@@ -666,11 +752,25 @@ export default function UserPage() {
       return
     }
 
-    void fetchUserData()
+    if (!userId) {
+      ++userDataRequestIdRef.current
+      return
+    }
+
+    void fetchUserData(
+      userId,
+      currentUserId
+    ).then((result) => {
+      applyUserDataResult(
+        result
+      )
+    })
   }, [
-    userId,
-    currentUserId,
+    applyUserDataResult,
     authLoading,
+    currentUserId,
+    fetchUserData,
+    userId,
   ])
 
   // =============================
@@ -748,7 +848,17 @@ export default function UserPage() {
                 )
         )
 
-        await fetchUserData()
+        setIsLoading(true)
+
+        const result =
+          await fetchUserData(
+            userId,
+            currentUserId
+          )
+
+        applyUserDataResult(
+          result
+        )
       } catch (error) {
         console.error(
           '贔屓処理エラー:',
@@ -866,7 +976,7 @@ export default function UserPage() {
   // =============================
 
   if (
-    isLoading ||
+    userDataLoading ||
     authLoading
   ) {
     return (
