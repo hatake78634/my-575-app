@@ -12,6 +12,15 @@
   --font-mono: var(--font-geist-mono);
 }
 
+:root[data-theme="sakura"] { --background: #241218; --foreground: #fff0f3; --accent-gold: #ef9aae; --accent-red: #c95070; }
+:root[data-theme="yoi"] { --background: #090d20; --foreground: #eef0ff; --accent-gold: #9ea9e8; --accent-red: #7653a8; }
+:root[data-theme="washi"] { --background: #241f17; --foreground: #f5eddc; --accent-gold: #b79858; --accent-red: #9d4b3d; }
+
+.avatar-shell { display: inline-grid; place-items: center; flex: 0 0 auto; overflow: hidden; border-radius: 50%; background: #3a2a20; color: var(--accent-gold); }
+.avatar-shell img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-frame-gold-ring { box-shadow: 0 0 0 3px #d9b864, 0 0 12px rgba(217, 184, 100, .45); }
+.avatar-frame-sakura-ring { box-shadow: 0 0 0 3px #eea6b8, 0 0 12px rgba(238, 166, 184, .45); }
+
 * {
   box-sizing: border-box;
 }
