@@ -206,15 +206,13 @@ export default function UtaawaseRoomPage() {
   ] =
     useState('')
 
-  const [
-    isFinished,
-    setIsFinished,
-  ] =
-    useState(false)
-
   // 同じラウンドの結果を何度も再取得しない
   const loadedResultRoundRef =
     useRef<number | null>(null)
+  const roomRequestIdRef = useRef(0)
+  const submittedRequestIdRef = useRef(0)
+  const nextEntryRequestIdRef = useRef(0)
+  const appliedRoundRef = useRef<number | null>(null)
 
   const [
     roomActionLoading,
@@ -335,15 +333,21 @@ export default function UtaawaseRoomPage() {
   ] =
     useState(false)
 
+  const [loadedNextEntryTarget, setLoadedNextEntryTarget] =
+    useState<{
+      roomId: string
+      userId: string
+    } | null>(null)
+
   // =============================
   // タイマー
   // =============================
 
-  const [
-    secondsLeft,
-    setSecondsLeft,
-  ] =
-    useState(0)
+  const [timerState, setTimerState] = useState<{
+    endString: string
+    secondsLeft: number
+  } | null>(null)
+  const [nowMs, setNowMs] = useState<number | null>(null)
 
   // =============================
   // 結果取得
@@ -426,15 +430,13 @@ export default function UtaawaseRoomPage() {
   // ルーム取得
   // =============================
 
-  const loadRoom =
+  const fetchRoom =
     useCallback(
-      async () => {
-        if (
-          !userId ||
-          !roomId
-        ) {
-          return
-        }
+      async (
+        targetRoomId: string,
+        targetUserId: string
+      ): Promise<RoomLoadResult> => {
+        const requestId = ++roomRequestIdRef.current
 
         const {
           data,
@@ -444,7 +446,7 @@ export default function UtaawaseRoomPage() {
             'get_my_utaawase_room',
             {
               p_room_id:
-                roomId,
+                targetRoomId,
             }
           )
 
@@ -454,12 +456,14 @@ export default function UtaawaseRoomPage() {
             error
           )
 
-          setErrorText(
-            '歌合の情報を取得できませんでした'
-          )
-
-          setLoading(false)
-          return
+          return {
+            requestId,
+            targetRoomId,
+            targetUserId,
+            status: 'error',
+            room: null,
+            errorText: '歌合の情報を取得できませんでした',
+          }
         }
 
         const nextRoom =
@@ -467,42 +471,82 @@ export default function UtaawaseRoomPage() {
             ? data[0]
             : data
 
-        if (nextRoom) {
-          setRoom(nextRoom)
-          setIsFinished(
-            nextRoom.room_status ===
-              'finished'
-          )
-          setErrorText('')
-        } else {
-          setRoom(null)
-          setErrorText(
-            '歌合を取得できませんでした'
-          )
+        return {
+          requestId,
+          targetRoomId,
+          targetUserId,
+          status: nextRoom ? 'success' : 'error',
+          room: (nextRoom ?? null) as Room | null,
+          errorText: nextRoom
+            ? ''
+            : '歌合を取得できませんでした',
         }
-
-        setLoading(false)
       },
-      [
-        roomId,
-        userId,
-      ]
+      []
     )
+
+  const applyRoomResult = useCallback(
+    (result: RoomLoadResult) => {
+      if (result.requestId !== roomRequestIdRef.current) {
+        return
+      }
+
+      if (result.status === 'error') {
+        setErrorText(result.errorText)
+        setLoading(false)
+        return
+      }
+
+      if (
+        result.room &&
+        appliedRoundRef.current !== result.room.round_number
+      ) {
+        appliedRoundRef.current = result.room.round_number
+        setFirstLine('')
+        setSecondLine('')
+        setThirdLine('')
+        setJoshi('')
+        submittedRoundRef.current = null
+        setSubmitted(false)
+        setRatingEntry(null)
+        setSelectedScore(null)
+        setRatingComplete(false)
+        setLoadedNextEntryTarget(null)
+        setResults([])
+        setResultsError('')
+        setNextTheme('')
+        loadedResultRoundRef.current = null
+      }
+
+      setRoom(result.room)
+      setErrorText(result.errorText)
+      setLoading(false)
+    },
+    []
+  )
+
+  const loadRoom = useCallback(async () => {
+    if (!userId || !roomId) {
+      return
+    }
+
+    const result = await fetchRoom(roomId, userId)
+    applyRoomResult(result)
+  }, [applyRoomResult, fetchRoom, roomId, userId])
 
   // =============================
   // 提出済み確認
   // =============================
 
-  const checkSubmitted =
+  const fetchSubmitted =
     useCallback(
-      async () => {
-        if (
-          !userId ||
-          !roomId ||
-          !room
-        ) {
-          return
-        }
+      async (
+        targetRoomId: string,
+        targetUserId: string,
+        roomType: string,
+        roundNumber: number
+      ): Promise<SubmittedLoadResult> => {
+        const requestId = ++submittedRequestIdRef.current
 
         let query =
           supabase
@@ -512,21 +556,21 @@ export default function UtaawaseRoomPage() {
             .select('id')
             .eq(
               'room_id',
-              roomId
+              targetRoomId
             )
             .eq(
               'user_id',
-              userId
+              targetUserId
             )
 
         if (
-          room.room_type ===
+          roomType ===
             'public'
         ) {
           query =
             query.eq(
               'round_number',
-              room.round_number
+              roundNumber
             )
         }
 
@@ -541,38 +585,55 @@ export default function UtaawaseRoomPage() {
             '提出確認エラー:',
             error
           )
-          return
+          return {
+            requestId,
+            targetRoomId,
+            targetUserId,
+            roundNumber,
+            status: 'error',
+            submitted: false,
+          }
         }
 
         const hasSubmitted =
           Array.isArray(data) &&
           data.length > 0
 
-        if (hasSubmitted) {
-          submittedRoundRef.current =
-            room.round_number
-
-          setSubmitted(true)
-          return
+        return {
+          requestId,
+          targetRoomId,
+          targetUserId,
+          roundNumber,
+          status: 'success',
+          submitted: hasSubmitted,
         }
-
-        // このラウンドで提出成功済みなら、
-        // 古い確認結果で false に戻さない
-        if (
-          submittedRoundRef.current ===
-          room.round_number
-        ) {
-          return
-        }
-
-        setSubmitted(false)
       },
-      [
-        roomId,
-        userId,
-        room,
-      ]
+      []
     )
+
+  const applySubmittedResult = useCallback(
+    (result: SubmittedLoadResult) => {
+      if (
+        result.requestId !== submittedRequestIdRef.current ||
+        result.status === 'error'
+      ) {
+        return
+      }
+
+      if (result.submitted) {
+        submittedRoundRef.current = result.roundNumber
+        setSubmitted(true)
+        return
+      }
+
+      if (submittedRoundRef.current === result.roundNumber) {
+        return
+      }
+
+      setSubmitted(false)
+    },
+    []
+  )
 
   // =============================
   // 時間経過処理
@@ -617,8 +678,6 @@ export default function UtaawaseRoomPage() {
           data ===
           'finished'
         ) {
-          setIsFinished(true)
-
           // 最新のroom状態だけ取得する。
           // 結果取得は下のfinished監視useEffectで
           // ラウンドごとに1回だけ行う。
@@ -640,20 +699,13 @@ export default function UtaawaseRoomPage() {
   // 次の匿名句
   // =============================
 
-  const loadNextEntry =
+  const fetchNextEntry =
     useCallback(
-      async () => {
-        if (
-          !userId ||
-          !roomId
-        ) {
-          return
-        }
-
-        setRatingLoading(
-          true
-        )
-
+      async (
+        targetRoomId: string,
+        targetUserId: string
+      ): Promise<NextEntryLoadResult> => {
+        const requestId = ++nextEntryRequestIdRef.current
         try {
           const {
             data,
@@ -663,7 +715,7 @@ export default function UtaawaseRoomPage() {
               'get_next_utaawase_entry',
               {
                 p_room_id:
-                  roomId,
+                  targetRoomId,
               }
             )
 
@@ -673,7 +725,13 @@ export default function UtaawaseRoomPage() {
               error
             )
 
-            return
+            return {
+              requestId,
+              targetRoomId,
+              targetUserId,
+              status: 'error',
+              entry: null,
+            }
           }
 
           const next =
@@ -687,70 +745,95 @@ export default function UtaawaseRoomPage() {
           // 全句評価終了
           // =========================
 
-          if (!next) {
-            setRatingEntry(
-              null
-            )
-
-            setRatingComplete(
-              true
-            )
-
-            await tickRoom()
-
-            return
+          return {
+            requestId,
+            targetRoomId,
+            targetUserId,
+            status: 'success',
+            entry: (next ?? null) as RatingEntry | null,
           }
-
-          // =========================
-          // 次の句
-          // =========================
-
-          setRatingEntry(
-            next
-          )
-
-          setSelectedScore(
-            null
-          )
-
-          setRatingComplete(
-            false
-          )
         } catch (error) {
           console.error(
             '評価句取得処理エラー:',
             error
           )
-        } finally {
-          setRatingLoading(
-            false
-          )
+          return {
+            requestId,
+            targetRoomId,
+            targetUserId,
+            status: 'error',
+            entry: null,
+          }
         }
       },
-      [
-        userId,
-        roomId,
-        tickRoom,
-      ]
+      []
     )
+
+  const applyNextEntryResult = useCallback(async (
+    result: NextEntryLoadResult
+  ) => {
+    if (result.requestId !== nextEntryRequestIdRef.current) {
+      return
+    }
+
+    setLoadedNextEntryTarget({
+      roomId: result.targetRoomId,
+      userId: result.targetUserId,
+    })
+
+    if (result.status === 'error') {
+      setRatingLoading(false)
+      return
+    }
+
+    setRatingEntry(result.entry)
+    setSelectedScore(null)
+    setRatingComplete(!result.entry)
+    setRatingLoading(false)
+
+    if (!result.entry) {
+      await tickRoom()
+    }
+  }, [tickRoom])
+
+  const loadNextEntry = useCallback(async () => {
+    if (!userId || !roomId) {
+      return
+    }
+
+    setRatingLoading(true)
+    const result = await fetchNextEntry(roomId, userId)
+    await applyNextEntryResult(result)
+  }, [applyNextEntryResult, fetchNextEntry, roomId, userId])
 
   // =============================
   // 初回取得
   // =============================
 
+  const currentRoomId = room?.room_id
+  const currentRoomType = room?.room_type
+  const currentRoundNumber = room?.round_number
+  const currentRoomStatus = room?.room_status
+
   useEffect(() => {
-    if (
-      authLoading ||
-      !userId
-    ) {
+    if (authLoading) {
       return
     }
 
-    void loadRoom()
+    if (!userId) {
+      roomRequestIdRef.current += 1
+      submittedRequestIdRef.current += 1
+      nextEntryRequestIdRef.current += 1
+      return
+    }
+
+    void fetchRoom(roomId, userId).then(applyRoomResult)
   }, [
+    applyRoomResult,
     authLoading,
+    fetchRoom,
+    roomId,
     userId,
-    loadRoom,
   ])
 
   // =============================
@@ -759,53 +842,30 @@ export default function UtaawaseRoomPage() {
 
   useEffect(() => {
     if (
-      !room ||
-      room.room_status !==
+      !currentRoomId ||
+      !currentRoomType ||
+      !userId ||
+      currentRoundNumber === undefined ||
+      currentRoomStatus !==
         'writing'
     ) {
       return
     }
 
-    void checkSubmitted()
+    void fetchSubmitted(
+      currentRoomId,
+      userId,
+      currentRoomType,
+      currentRoundNumber
+    ).then(applySubmittedResult)
   }, [
-    room?.room_id,
-    room?.round_number,
-    room?.room_status,
-    checkSubmitted,
-  ])
-
-  // =============================
-  // ラウンド切替時に画面状態をリセット
-  // =============================
-
-  useEffect(() => {
-    if (!room) {
-      return
-    }
-
-    setFirstLine('')
-    setSecondLine('')
-    setThirdLine('')
-    setJoshi('')
-    submittedRoundRef.current = null
-    setSubmitted(false)
-    setRatingEntry(null)
-    setSelectedScore(null)
-    setRatingComplete(false)
-    setResults([])
-    setResultsError('')
-    setNextTheme('')
-
-    // 新しいラウンドでは、まだ結果未取得の状態に戻す。
-    loadedResultRoundRef.current =
-      null
-
-    setIsFinished(
-      room.room_status ===
-        'finished'
-    )
-  }, [
-    room?.round_number,
+    applySubmittedResult,
+    fetchSubmitted,
+    currentRoomId,
+    currentRoomType,
+    currentRoundNumber,
+    currentRoomStatus,
+    userId,
   ])
 
   // =============================
@@ -817,18 +877,16 @@ export default function UtaawaseRoomPage() {
 
   useEffect(() => {
     if (
-      !room ||
-      room.room_status !==
+      currentRoundNumber === undefined ||
+      currentRoomStatus !==
         'finished'
     ) {
       return
     }
 
-    setIsFinished(true)
-
     if (
       loadedResultRoundRef.current ===
-      room.round_number
+      currentRoundNumber
     ) {
       return
     }
@@ -836,12 +894,12 @@ export default function UtaawaseRoomPage() {
     // 非同期処理を始める前に記録して、
     // 2秒ポーリングとの二重実行を防ぐ。
     loadedResultRoundRef.current =
-      room.round_number
+      currentRoundNumber
 
     void loadResults()
   }, [
-    room?.room_status,
-    room?.round_number,
+    currentRoomStatus,
+    currentRoundNumber,
     loadResults,
   ])
 
@@ -900,18 +958,24 @@ export default function UtaawaseRoomPage() {
     if (
       room?.room_status !==
         'rating' ||
+      !userId ||
       ratingEntry ||
       ratingComplete
     ) {
       return
     }
 
-    void loadNextEntry()
+    void fetchNextEntry(roomId, userId).then(
+      applyNextEntryResult
+    )
   }, [
+    applyNextEntryResult,
+    fetchNextEntry,
+    roomId,
     room?.room_status,
     ratingEntry,
     ratingComplete,
-    loadNextEntry,
+    userId,
   ])
 
   // =============================
@@ -949,10 +1013,6 @@ export default function UtaawaseRoomPage() {
     if (
       !endString
     ) {
-      setSecondsLeft(
-        0
-      )
-
       return
     }
 
@@ -972,12 +1032,10 @@ export default function UtaawaseRoomPage() {
               1000
           )
 
-        setSecondsLeft(
-          Math.max(
-            diff,
-            0
-          )
-        )
+        setTimerState({
+          endString,
+          secondsLeft: Math.max(diff, 0),
+        })
       }
 
     updateTimer()
@@ -996,6 +1054,27 @@ export default function UtaawaseRoomPage() {
   }, [
     room,
   ])
+
+  useEffect(() => {
+    if (!room?.session_ends_at) {
+      return
+    }
+
+    let interval: number | null = null
+    const frame = window.requestAnimationFrame(() => {
+      setNowMs(Date.now())
+      interval = window.setInterval(() => {
+        setNowMs(Date.now())
+      }, 60000)
+    })
+
+    return () => {
+      window.cancelAnimationFrame(frame)
+      if (interval !== null) {
+        window.clearInterval(interval)
+      }
+    }
+  }, [room?.session_ends_at])
 
   // =============================
   // 作句提出
@@ -1229,7 +1308,6 @@ export default function UtaawaseRoomPage() {
         }
 
         setNextTheme('')
-        setIsFinished(false)
         await loadRoom()
       } finally {
         setRoomActionLoading(false)
@@ -1281,7 +1359,6 @@ export default function UtaawaseRoomPage() {
           return
         }
 
-        setIsFinished(false)
         await loadRoom()
       } finally {
         setRoomActionLoading(false)
@@ -1291,6 +1368,26 @@ export default function UtaawaseRoomPage() {
   // =============================
   // 時間表示
   // =============================
+
+  const timerEndString =
+    room?.room_status === 'writing'
+      ? room.writing_ends_at
+      : room?.room_status === 'rating'
+        ? room.rating_ends_at
+        : null
+
+  const secondsLeft =
+    timerEndString &&
+    timerState?.endString === timerEndString
+      ? timerState.secondsLeft
+      : 0
+
+  const effectiveRatingLoading =
+    ratingLoading ||
+    (room?.room_status === 'rating' &&
+      userId !== null &&
+      (loadedNextEntryTarget?.roomId !== roomId ||
+        loadedNextEntryTarget.userId !== userId))
 
   const minutes =
     Math.floor(
@@ -1324,11 +1421,12 @@ export default function UtaawaseRoomPage() {
 
   const sessionExpired =
     Boolean(
+      nowMs !== null &&
       room?.session_ends_at &&
         new Date(
           room.session_ends_at
         ).getTime() <=
-          Date.now()
+          nowMs
     )
 
   // =============================
@@ -1424,9 +1522,7 @@ export default function UtaawaseRoomPage() {
   // 結果発表
   // =============================
 
-  if (
-    isFinished
-  ) {
+  if (room?.room_status === 'finished') {
     const myResult =
       results.find(
         (result) =>
@@ -2454,7 +2550,7 @@ export default function UtaawaseRoomPage() {
                 ただちに結果を発表します。
               </div>
             </section>
-          ) : ratingLoading ? (
+          ) : effectiveRatingLoading ? (
             <section
               style={{
                 ...cardStyle,
@@ -3592,4 +3688,30 @@ const secondaryButton = {
 
   cursor:
     'pointer',
+}
+
+type RoomLoadResult = {
+  requestId: number
+  targetRoomId: string
+  targetUserId: string
+  status: 'success' | 'error'
+  room: Room | null
+  errorText: string
+}
+
+type SubmittedLoadResult = {
+  requestId: number
+  targetRoomId: string
+  targetUserId: string
+  roundNumber: number
+  status: 'success' | 'error'
+  submitted: boolean
+}
+
+type NextEntryLoadResult = {
+  requestId: number
+  targetRoomId: string
+  targetUserId: string
+  status: 'success' | 'error'
+  entry: RatingEntry | null
 }

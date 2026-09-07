@@ -1,7 +1,17 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
+import {
+  useRouter,
+  useSearchParams,
+} from 'next/navigation'
+import Image from 'next/image'
 
 import { supabase } from '../../lib/supabase'
 import BottomNav from '../components/BottomNav'
@@ -28,8 +38,46 @@ type TagResult = {
   count: number
 }
 
-export default function SearchPage() {
+type LikeData = {
+  likeCounts: Record<string, number>
+  userLikes: Record<string, boolean>
+}
+
+type SearchTarget = {
+  mode: SearchTab
+  query: string
+  viewerUserId: string | null
+}
+
+type TagTarget = {
+  tagName: string
+  viewerUserId: string | null
+}
+
+type SearchLoadResult = {
+  requestId: number
+  target: SearchTarget
+  status: 'success' | 'error'
+  haikus: Haiku[]
+  users: Profile[]
+  tags: TagResult[]
+  likeCounts: Record<string, number>
+  userLikes: Record<string, boolean>
+}
+
+type TagLoadResult = {
+  requestId: number
+  target: TagTarget
+  status: 'success' | 'error'
+  haikus: Haiku[]
+  likeCounts: Record<string, number>
+  userLikes: Record<string, boolean>
+}
+
+function FindPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const urlTag = searchParams.get('tag')
 
   const {
     userId,
@@ -45,9 +93,6 @@ export default function SearchPage() {
 
   const [activeTab, setActiveTab] =
     useState<SearchTab>('haiku')
-
-  const [isSearching, setIsSearching] =
-    useState(false)
 
   // =============================
   // 検索結果
@@ -66,18 +111,12 @@ export default function SearchPage() {
   // 選択した札
   // =============================
 
-  const [selectedTag, setSelectedTag] =
-    useState<string | null>(null)
+  const selectedTag = urlTag
 
   const [
     selectedTagHaikus,
     setSelectedTagHaikus,
   ] = useState<Haiku[]>([])
-
-  const [
-    selectedTagLoading,
-    setSelectedTagLoading,
-  ] = useState(false)
 
   // =============================
   // 雅
@@ -93,446 +132,40 @@ export default function SearchPage() {
       [key: string]: boolean
     }>({})
 
+  const [loadedSearchTarget, setLoadedSearchTarget] =
+    useState<SearchTarget | null>(null)
+
+  const [loadedTagTarget, setLoadedTagTarget] =
+    useState<TagTarget | null>(null)
+
+  const searchRequestIdRef = useRef(0)
+  const tagRequestIdRef = useRef(0)
+
+  const effectiveActiveTab: SearchTab =
+    selectedTag ? 'tag' : activeTab
+  const effectiveQuery = selectedTag ?? query
+  const trimmedEffectiveQuery =
+    effectiveQuery.trim()
+
   // =============================
   // URLの ?tag=春 を読む
   // =============================
-
-  useEffect(() => {
-    const params =
-      new URLSearchParams(
-        window.location.search
-      )
-
-    const tag =
-      params.get('tag')
-
-    if (!tag) {
-      return
-    }
-
-    setActiveTab('tag')
-    setQuery(tag)
-    setSelectedTag(tag)
-
-    void loadHaikusByTag(tag)
-  }, [])
 
   // =============================
   // 検索文字が変わったら検索
   // =============================
 
-  useEffect(() => {
-    const trimmed =
-      query.trim()
-
-    if (!trimmed) {
-      setHaikuResults([])
-      setUserResults([])
-      setTagResults([])
-      return
-    }
-
-    // 札詳細表示中は
-    // 勝手に検索し直さない
-    if (selectedTag) {
-      return
-    }
-
-    const timer =
-      window.setTimeout(() => {
-        void runSearch(
-          trimmed,
-          activeTab
-        )
-      }, 300)
-
-    return () => {
-      window.clearTimeout(timer)
-    }
-  }, [
-    query,
-    activeTab,
-    selectedTag,
-  ])
-
   // =============================
   // 検索
   // =============================
-
-  const runSearch = async (
-    searchText: string,
-    tab: SearchTab
-  ) => {
-    setIsSearching(true)
-
-    try {
-      if (tab === 'haiku') {
-        await searchHaikus(
-          searchText
-        )
-      }
-
-      if (tab === 'user') {
-        await searchUsers(
-          searchText
-        )
-      }
-
-      if (tab === 'tag') {
-        await searchTags(
-          searchText
-        )
-      }
-    } finally {
-      setIsSearching(false)
-    }
-  }
 
   // =============================
   // 句検索
   // =============================
 
-  const searchHaikus = async (
-    searchText: string
-  ) => {
-    const {
-      data,
-      error,
-    } = await supabase
-      .from('haikus_2')
-      .select('*')
-      .or(
-        `first_line.ilike.%${searchText}%,second_line.ilike.%${searchText}%,third_line.ilike.%${searchText}%,joshi.ilike.%${searchText}%,description.ilike.%${searchText}%`
-      )
-      .order(
-        'created_at',
-        {
-          ascending: false,
-        }
-      )
-
-    if (error) {
-      console.error(
-        '句検索エラー:',
-        error
-      )
-
-      setHaikuResults([])
-      return
-    }
-
-    const haikus =
-      (data ?? []) as Haiku[]
-
-    const haikusWithTags =
-      await attachTagsToHaikus(
-        haikus
-      )
-
-    setHaikuResults(
-      haikusWithTags
-    )
-
-    await loadLikes(
-      haikusWithTags
-    )
-  }
-
-  // =============================
-  // 歌人検索
-  // =============================
-
-  const searchUsers = async (
-    searchText: string
-  ) => {
-    const {
-      data,
-      error,
-    } = await supabase
-      .from('profiles_3')
-      .select(
-        'id, username, avatar_url, bio'
-      )
-      .ilike(
-        'username',
-        `%${searchText}%`
-      )
-      .limit(30)
-
-    if (error) {
-      console.error(
-        '歌人検索エラー:',
-        error
-      )
-
-      setUserResults([])
-      return
-    }
-
-    setUserResults(
-      (data ?? []) as Profile[]
-    )
-  }
-
-  // =============================
-  // 札検索
-  // =============================
-
-  const searchTags = async (
-    searchText: string
-  ) => {
-    const {
-      data,
-      error,
-    } = await supabase
-      .from('tags')
-      .select('id, name')
-      .ilike(
-        'name',
-        `%${searchText}%`
-      )
-      .limit(30)
-
-    if (error) {
-      console.error(
-        '札検索エラー:',
-        error
-      )
-
-      setTagResults([])
-      return
-    }
-
-    const tags =
-      data ?? []
-
-    if (
-      tags.length === 0
-    ) {
-      setTagResults([])
-      return
-    }
-
-    const tagIds =
-      tags.map(
-        (tag) => tag.id
-      )
-
-    // それぞれの札が
-    // 何句に使われているか取得
-    const {
-      data: links,
-      error: linkError,
-    } = await supabase
-      .from('haiku_tags')
-      .select(
-        'tag_id, haiku_id'
-      )
-      .in(
-        'tag_id',
-        tagIds
-      )
-
-    if (linkError) {
-      console.error(
-        '札件数取得エラー:',
-        linkError
-      )
-    }
-
-    const results: TagResult[] =
-      tags.map((tag) => {
-        const count =
-          links?.filter(
-            (link) =>
-              link.tag_id ===
-              tag.id
-          ).length ?? 0
-
-        return {
-          id: tag.id,
-          name: tag.name,
-          count,
-        }
-      })
-
-    results.sort(
-      (a, b) =>
-        b.count - a.count
-    )
-
-    setTagResults(results)
-  }
-
-  // =============================
-  // 札を選ぶ
-  // =============================
-
-  const openTag = async (
-    tagName: string
-  ) => {
-    setActiveTab('tag')
-    setQuery(tagName)
-    setSelectedTag(tagName)
-
-    window.history.replaceState(
-      null,
-      '',
-      `/find?tag=${encodeURIComponent(
-        tagName
-      )}`
-    )
-
-    await loadHaikusByTag(
-      tagName
-    )
-  }
-
-  // =============================
-  // 札から句一覧
-  // =============================
-
-  const loadHaikusByTag =
-    async (
-      tagName: string
-    ) => {
-      setSelectedTagLoading(
-        true
-      )
-
-      try {
-        // 札ID
-        const {
-          data: tag,
-          error: tagError,
-        } = await supabase
-          .from('tags')
-          .select('id, name')
-          .eq(
-            'name',
-            tagName
-          )
-          .maybeSingle()
-
-        if (tagError) {
-          console.error(
-            '札取得エラー:',
-            tagError
-          )
-
-          setSelectedTagHaikus(
-            []
-          )
-          return
-        }
-
-        if (!tag) {
-          setSelectedTagHaikus(
-            []
-          )
-          return
-        }
-
-        // 札と句の関係
-        const {
-          data: links,
-          error: linkError,
-        } = await supabase
-          .from('haiku_tags')
-          .select('haiku_id')
-          .eq(
-            'tag_id',
-            tag.id
-          )
-
-        if (linkError) {
-          console.error(
-            '札紐付け取得エラー:',
-            linkError
-          )
-
-          setSelectedTagHaikus(
-            []
-          )
-          return
-        }
-
-        const haikuIds =
-          links?.map(
-            (link) =>
-              link.haiku_id
-          ) ?? []
-
-        if (
-          haikuIds.length === 0
-        ) {
-          setSelectedTagHaikus(
-            []
-          )
-          return
-        }
-
-        // 句本体
-        const {
-          data: haikuData,
-          error: haikuError,
-        } = await supabase
-          .from('haikus_2')
-          .select('*')
-          .in(
-            'id',
-            haikuIds
-          )
-          .order(
-            'created_at',
-            {
-              ascending: false,
-            }
-          )
-
-        if (haikuError) {
-          console.error(
-            '札の句取得エラー:',
-            haikuError
-          )
-
-          setSelectedTagHaikus(
-            []
-          )
-          return
-        }
-
-        const loaded =
-          (haikuData ??
-            []) as Haiku[]
-
-        const withTags =
-          await attachTagsToHaikus(
-            loaded
-          )
-
-        setSelectedTagHaikus(
-          withTags
-        )
-
-        await loadLikes(
-          withTags
-        )
-      } finally {
-        setSelectedTagLoading(
-          false
-        )
-      }
-    }
-
-  // =============================
-  // 句に札を付加
-  // =============================
-
-  const attachTagsToHaikus =
-    async (
-      haikus: Haiku[]
-    ): Promise<Haiku[]> => {
+  const attachTagsToHaikusData = useCallback(async (
+    haikus: Haiku[]
+  ): Promise<Haiku[]> => {
       if (
         haikus.length === 0
       ) {
@@ -645,19 +278,26 @@ export default function SearchPage() {
           }
         }
       )
-    }
+  }, [])
 
   // =============================
   // 雅情報
   // =============================
 
-  const loadLikes = async (
-    haikus: Haiku[]
-  ) => {
+  const loadLikesData = useCallback(async (
+    haikus: Haiku[],
+    viewerUserId: string | null
+  ): Promise<LikeData> => {
+    const counts: Record<string, number> = {}
+    const myLikes: Record<string, boolean> = {}
+
     if (
       haikus.length === 0
     ) {
-      return
+      return {
+        likeCounts: counts,
+        userLikes: myLikes,
+      }
     }
 
     const {
@@ -673,16 +313,11 @@ export default function SearchPage() {
         error
       )
 
-      return
+      return {
+        likeCounts: counts,
+        userLikes: myLikes,
+      }
     }
-
-    const counts: {
-      [key: string]: number
-    } = {}
-
-    const myLikes: {
-      [key: string]: boolean
-    } = {}
 
     haikus.forEach(
       (haiku) => {
@@ -700,31 +335,541 @@ export default function SearchPage() {
         counts[haiku.id] =
           haikuLikes.length
 
-        if (userId) {
+        if (viewerUserId) {
           myLikes[haiku.id] =
             haikuLikes.some(
               (like) =>
                 like.user_id ===
-                userId
+                viewerUserId
             )
         }
       }
     )
 
-    setLikeCounts(
-      (prev) => ({
-        ...prev,
-        ...counts,
-      })
+    return {
+      likeCounts: counts,
+      userLikes: myLikes,
+    }
+  }, [])
+
+  const searchHaikus = useCallback(async (
+    searchText: string,
+    viewerUserId: string | null
+  ) => {
+    const {
+      data,
+      error,
+    } = await supabase
+      .from('haikus_2')
+      .select('*')
+      .or(
+        `first_line.ilike.%${searchText}%,second_line.ilike.%${searchText}%,third_line.ilike.%${searchText}%,joshi.ilike.%${searchText}%,description.ilike.%${searchText}%`
+      )
+      .order(
+        'created_at',
+        {
+          ascending: false,
+        }
+      )
+
+    if (error) {
+      console.error(
+        '句検索エラー:',
+        error
+      )
+
+      return {
+        status: 'error' as const,
+        haikus: [] as Haiku[],
+        likeCounts: {},
+        userLikes: {},
+      }
+    }
+
+    const haikus =
+      (data ?? []) as Haiku[]
+
+    const haikusWithTags =
+      await attachTagsToHaikusData(
+        haikus
+      )
+
+    const likes = await loadLikesData(
+      haikusWithTags,
+      viewerUserId
     )
 
-    setUserLikes(
-      (prev) => ({
-        ...prev,
-        ...myLikes,
+    return {
+      status: 'success' as const,
+      haikus: haikusWithTags,
+      ...likes,
+    }
+  }, [attachTagsToHaikusData, loadLikesData])
+
+  // =============================
+  // 歌人検索
+  // =============================
+
+  const searchUsers = useCallback(async (
+    searchText: string
+  ) => {
+    const {
+      data,
+      error,
+    } = await supabase
+      .from('profiles_3')
+      .select(
+        'id, username, avatar_url, bio'
+      )
+      .ilike(
+        'username',
+        `%${searchText}%`
+      )
+      .limit(30)
+
+    if (error) {
+      console.error(
+        '歌人検索エラー:',
+        error
+      )
+
+      return {
+        status: 'error' as const,
+        users: [] as Profile[],
+      }
+    }
+
+    return {
+      status: 'success' as const,
+      users: (data ?? []) as Profile[],
+    }
+  }, [])
+
+  // =============================
+  // 札検索
+  // =============================
+
+  const searchTags = useCallback(async (
+    searchText: string
+  ) => {
+    const {
+      data,
+      error,
+    } = await supabase
+      .from('tags')
+      .select('id, name')
+      .ilike(
+        'name',
+        `%${searchText}%`
+      )
+      .limit(30)
+
+    if (error) {
+      console.error(
+        '札検索エラー:',
+        error
+      )
+
+      return {
+        status: 'error' as const,
+        tags: [] as TagResult[],
+      }
+    }
+
+    const tags =
+      data ?? []
+
+    if (
+      tags.length === 0
+    ) {
+      return {
+        status: 'success' as const,
+        tags: [] as TagResult[],
+      }
+    }
+
+    const tagIds =
+      tags.map(
+        (tag) => tag.id
+      )
+
+    // それぞれの札が
+    // 何句に使われているか取得
+    const {
+      data: links,
+      error: linkError,
+    } = await supabase
+      .from('haiku_tags')
+      .select(
+        'tag_id, haiku_id'
+      )
+      .in(
+        'tag_id',
+        tagIds
+      )
+
+    if (linkError) {
+      console.error(
+        '札件数取得エラー:',
+        linkError
+      )
+    }
+
+    const results: TagResult[] =
+      tags.map((tag) => {
+        const count =
+          links?.filter(
+            (link) =>
+              link.tag_id ===
+              tag.id
+          ).length ?? 0
+
+        return {
+          id: tag.id,
+          name: tag.name,
+          count,
+        }
       })
+
+    results.sort(
+      (a, b) =>
+        b.count - a.count
     )
+
+    return {
+      status: linkError
+        ? 'error' as const
+        : 'success' as const,
+      tags: results,
+    }
+  }, [])
+
+  // =============================
+  // 札を選ぶ
+  // =============================
+
+  const runSearch = useCallback(async (
+    requestId: number,
+    searchText: string,
+    tab: SearchTab,
+    viewerUserId: string | null
+  ): Promise<SearchLoadResult> => {
+    const target: SearchTarget = {
+      mode: tab,
+      query: searchText,
+      viewerUserId,
+    }
+    const empty = {
+      requestId,
+      target,
+      haikus: [] as Haiku[],
+      users: [] as Profile[],
+      tags: [] as TagResult[],
+      likeCounts: {} as Record<string, number>,
+      userLikes: {} as Record<string, boolean>,
+    }
+
+    if (tab === 'haiku') {
+      const result = await searchHaikus(
+        searchText,
+        viewerUserId
+      )
+      return {
+        ...empty,
+        status: result.status,
+        haikus: result.haikus,
+        likeCounts: result.likeCounts,
+        userLikes: result.userLikes,
+      }
+    }
+
+    if (tab === 'user') {
+      const result = await searchUsers(searchText)
+      return {
+        ...empty,
+        status: result.status,
+        users: result.users,
+      }
+    }
+
+    const result = await searchTags(searchText)
+    return {
+      ...empty,
+      status: result.status,
+      tags: result.tags,
+    }
+  }, [searchHaikus, searchTags, searchUsers])
+
+  const applySearchResult = useCallback(
+    (result: SearchLoadResult) => {
+      if (
+        result.requestId !==
+        searchRequestIdRef.current
+      ) {
+        return
+      }
+
+      setHaikuResults(result.haikus)
+      setUserResults(result.users)
+      setTagResults(result.tags)
+      setLikeCounts(result.likeCounts)
+      setUserLikes(result.userLikes)
+      setLoadedSearchTarget(result.target)
+    },
+    []
+  )
+
+  const openTag = (
+    tagName: string
+  ) => {
+    setActiveTab('tag')
+    setQuery(tagName)
+    router.replace(
+      `/find?tag=${encodeURIComponent(
+        tagName
+      )}`
+    )
+
   }
+
+  // =============================
+  // 札から句一覧
+  // =============================
+
+  const loadHaikusByTag = useCallback(
+    async (
+      requestId: number,
+      tagName: string,
+      viewerUserId: string | null
+    ): Promise<TagLoadResult> => {
+      const target: TagTarget = {
+        tagName,
+        viewerUserId,
+      }
+      const emptyResult = (
+        status: 'success' | 'error'
+      ): TagLoadResult => ({
+        requestId,
+        target,
+        status,
+        haikus: [],
+        likeCounts: {},
+        userLikes: {},
+      })
+        // 札ID
+        const {
+          data: tag,
+          error: tagError,
+        } = await supabase
+          .from('tags')
+          .select('id, name')
+          .eq(
+            'name',
+            tagName
+          )
+          .maybeSingle()
+
+        if (tagError) {
+          console.error(
+            '札取得エラー:',
+            tagError
+          )
+
+          return emptyResult('error')
+        }
+
+        if (!tag) {
+          return emptyResult('success')
+        }
+
+        // 札と句の関係
+        const {
+          data: links,
+          error: linkError,
+        } = await supabase
+          .from('haiku_tags')
+          .select('haiku_id')
+          .eq(
+            'tag_id',
+            tag.id
+          )
+
+        if (linkError) {
+          console.error(
+            '札紐付け取得エラー:',
+            linkError
+          )
+
+          return emptyResult('error')
+        }
+
+        const haikuIds =
+          links?.map(
+            (link) =>
+              link.haiku_id
+          ) ?? []
+
+        if (
+          haikuIds.length === 0
+        ) {
+          return emptyResult('success')
+        }
+
+        // 句本体
+        const {
+          data: haikuData,
+          error: haikuError,
+        } = await supabase
+          .from('haikus_2')
+          .select('*')
+          .in(
+            'id',
+            haikuIds
+          )
+          .order(
+            'created_at',
+            {
+              ascending: false,
+            }
+          )
+
+        if (haikuError) {
+          console.error(
+            '札の句取得エラー:',
+            haikuError
+          )
+
+          return emptyResult('error')
+        }
+
+        const loaded =
+          (haikuData ??
+            []) as Haiku[]
+
+        const withTags =
+          await attachTagsToHaikusData(
+            loaded
+          )
+
+        const likes = await loadLikesData(
+          withTags,
+          viewerUserId
+        )
+
+        return {
+          requestId,
+          target,
+          status: 'success',
+          haikus: withTags,
+          ...likes,
+        }
+    },
+    [attachTagsToHaikusData, loadLikesData]
+  )
+
+  // =============================
+  // 句に札を付加
+  // =============================
+
+  const applyTagResult = useCallback(
+    (result: TagLoadResult) => {
+      if (
+        result.requestId !==
+        tagRequestIdRef.current
+      ) {
+        return
+      }
+
+      setSelectedTagHaikus(result.haikus)
+      setLikeCounts(result.likeCounts)
+      setUserLikes(result.userLikes)
+      setLoadedTagTarget(result.target)
+    },
+    []
+  )
+
+  useEffect(() => {
+    const requestId =
+      ++searchRequestIdRef.current
+
+    if (
+      authLoading ||
+      selectedTag ||
+      !trimmedEffectiveQuery
+    ) {
+      return
+    }
+
+    const timer = window.setTimeout(() => {
+      void runSearch(
+        requestId,
+        trimmedEffectiveQuery,
+        effectiveActiveTab,
+        userId
+      ).then(applySearchResult)
+    }, 300)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [
+    applySearchResult,
+    authLoading,
+    effectiveActiveTab,
+    runSearch,
+    selectedTag,
+    trimmedEffectiveQuery,
+    userId,
+  ])
+
+  useEffect(() => {
+    const requestId =
+      ++tagRequestIdRef.current
+
+    if (authLoading || !selectedTag) {
+      return
+    }
+
+    void loadHaikusByTag(
+      requestId,
+      selectedTag,
+      userId
+    ).then(applyTagResult)
+  }, [
+    applyTagResult,
+    authLoading,
+    loadHaikusByTag,
+    selectedTag,
+    userId,
+  ])
+
+  const searchTargetMatches =
+    loadedSearchTarget?.mode ===
+      effectiveActiveTab &&
+    loadedSearchTarget.query ===
+      trimmedEffectiveQuery &&
+    loadedSearchTarget.viewerUserId === userId
+  const isSearching =
+    !authLoading &&
+    !selectedTag &&
+    Boolean(trimmedEffectiveQuery) &&
+    !searchTargetMatches
+  const displayedHaikuResults =
+    searchTargetMatches ? haikuResults : []
+  const displayedUserResults =
+    searchTargetMatches ? userResults : []
+  const displayedTagResults =
+    searchTargetMatches ? tagResults : []
+
+  const tagTargetMatches =
+    Boolean(selectedTag) &&
+    loadedTagTarget?.tagName === selectedTag &&
+    loadedTagTarget.viewerUserId === userId
+  const selectedTagLoading =
+    Boolean(selectedTag) &&
+    (!tagTargetMatches || authLoading)
+  const displayedSelectedTagHaikus =
+    tagTargetMatches ? selectedTagHaikus : []
 
   // =============================
   // 雅を贈る
@@ -838,24 +983,11 @@ export default function SearchPage() {
   const changeTab = (
     tab: SearchTab
   ) => {
-    setActiveTab(tab)
-    setSelectedTag(null)
-    setSelectedTagHaikus([])
-
-    window.history.replaceState(
-      null,
-      '',
-      '/find'
-    )
-
-    if (
-      query.trim()
-    ) {
-      void runSearch(
-        query.trim(),
-        tab
-      )
+    if (selectedTag) {
+      setQuery(effectiveQuery)
     }
+    setActiveTab(tab)
+    router.replace('/find')
   }
 
   // =============================
@@ -864,18 +996,15 @@ export default function SearchPage() {
 
   const clearSearch = () => {
     setQuery('')
-    setSelectedTag(null)
+    searchRequestIdRef.current += 1
+    tagRequestIdRef.current += 1
 
     setHaikuResults([])
     setUserResults([])
     setTagResults([])
     setSelectedTagHaikus([])
 
-    window.history.replaceState(
-      null,
-      '',
-      '/find'
-    )
+    router.replace('/find')
   }
 
   // =============================
@@ -972,7 +1101,7 @@ export default function SearchPage() {
 
           <input
             type="text"
-            value={query}
+            value={effectiveQuery}
             onChange={(e) => {
               setQuery(
                 e.target.value
@@ -981,26 +1110,14 @@ export default function SearchPage() {
               if (
                 selectedTag
               ) {
-                setSelectedTag(
-                  null
-                )
-
-                setSelectedTagHaikus(
-                  []
-                )
-
-                window.history.replaceState(
-                  null,
-                  '',
-                  '/find'
-                )
+                router.replace('/find')
               }
             }}
             placeholder={
-              activeTab ===
+              effectiveActiveTab ===
               'haiku'
                 ? '句を探す'
-                : activeTab ===
+                : effectiveActiveTab ===
                     'user'
                   ? '歌人を探す'
                   : '札を探す'
@@ -1019,7 +1136,7 @@ export default function SearchPage() {
             }}
           />
 
-          {query && (
+          {effectiveQuery && (
             <button
               type="button"
               onClick={
@@ -1057,7 +1174,7 @@ export default function SearchPage() {
           <TabButton
             label="句"
             active={
-              activeTab ===
+              effectiveActiveTab ===
               'haiku'
             }
             onClick={() =>
@@ -1070,7 +1187,7 @@ export default function SearchPage() {
           <TabButton
             label="歌人"
             active={
-              activeTab ===
+              effectiveActiveTab ===
               'user'
             }
             onClick={() =>
@@ -1083,7 +1200,7 @@ export default function SearchPage() {
           <TabButton
             label="札"
             active={
-              activeTab ===
+              effectiveActiveTab ===
               'tag'
             }
             onClick={() =>
@@ -1098,10 +1215,10 @@ export default function SearchPage() {
             検索前
         ===================== */}
 
-        {!query.trim() &&
+        {!trimmedEffectiveQuery &&
           !selectedTag && (
             <EmptySearch
-              tab={activeTab}
+              tab={effectiveActiveTab}
             />
           )}
 
@@ -1128,12 +1245,12 @@ export default function SearchPage() {
         ===================== */}
 
         {!isSearching &&
-          activeTab ===
+          effectiveActiveTab ===
             'haiku' &&
-          query.trim() && (
+          trimmedEffectiveQuery && (
             <HaikuResults
               haikus={
-                haikuResults
+                displayedHaikuResults
               }
               likeCounts={
                 likeCounts
@@ -1152,12 +1269,12 @@ export default function SearchPage() {
         ===================== */}
 
         {!isSearching &&
-          activeTab ===
+          effectiveActiveTab ===
             'user' &&
-          query.trim() && (
+          trimmedEffectiveQuery && (
             <UserResults
               users={
-                userResults
+                displayedUserResults
               }
               onOpen={(
                 id
@@ -1175,12 +1292,12 @@ export default function SearchPage() {
 
         {!selectedTag &&
           !isSearching &&
-          activeTab ===
+          effectiveActiveTab ===
             'tag' &&
-          query.trim() && (
+          trimmedEffectiveQuery && (
             <TagResults
               tags={
-                tagResults
+                displayedTagResults
               }
               onOpen={
                 openTag
@@ -1192,7 +1309,7 @@ export default function SearchPage() {
             札詳細
         ===================== */}
 
-        {activeTab ===
+        {effectiveActiveTab ===
           'tag' &&
           selectedTag && (
             <div>
@@ -1205,23 +1322,9 @@ export default function SearchPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    setSelectedTag(
-                      null
-                    )
-
-                    setSelectedTagHaikus(
-                      []
-                    )
-
-                    window.history.replaceState(
-                      null,
-                      '',
-                      '/find'
-                    )
-
-                    void searchTags(
-                      query
-                    )
+                    setQuery(selectedTag)
+                    setActiveTab('tag')
+                    router.replace('/find')
                   }}
                   style={{
                     background:
@@ -1263,7 +1366,7 @@ export default function SearchPage() {
                   }}
                 >
                   {
-                    selectedTagHaikus.length
+                    displayedSelectedTagHaikus.length
                   }
                   句
                 </div>
@@ -1283,7 +1386,7 @@ export default function SearchPage() {
               ) : (
                 <HaikuResults
                   haikus={
-                    selectedTagHaikus
+                    displayedSelectedTagHaikus
                   }
                   likeCounts={
                     likeCounts
@@ -1312,6 +1415,14 @@ export default function SearchPage() {
 // =============================
 // 句一覧
 // =============================
+
+export default function FindPage() {
+  return (
+    <Suspense fallback={null}>
+      <FindPageContent />
+    </Suspense>
+  )
+}
 
 type HaikuResultsProps = {
   haikus: Haiku[]
@@ -1439,11 +1550,14 @@ function UserResults({
             }}
           >
             {user.avatar_url ? (
-              <img
+              <Image
                 src={
                   user.avatar_url
                 }
                 alt=""
+                width={46}
+                height={46}
+                unoptimized
                 style={{
                   width:
                     '46px',

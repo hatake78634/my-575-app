@@ -10,6 +10,7 @@ import {
   useParams,
   useRouter,
 } from 'next/navigation'
+import Image from 'next/image'
 
 import {
   supabase,
@@ -879,12 +880,18 @@ export default function PublicUtaawaseLobbyPage() {
                       }}
                     >
                       {member.member_avatar_url ? (
-                        <img
+                        <Image
                           src={
                             member.member_avatar_url
                           }
 
                           alt=""
+
+                          width={44}
+
+                          height={44}
+
+                          unoptimized
 
                           style={{
                             width:

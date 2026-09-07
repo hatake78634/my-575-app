@@ -1,6 +1,11 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import { useRouter } from 'next/navigation'
 
 import { supabase } from '../../../lib/supabase'
@@ -48,20 +53,22 @@ export default function UtaawaseWaitingPage() {
 
   // 画面遷移の二重実行防止
   const movingRef = useRef(false)
+  const queueRequestIdRef = useRef(0)
+  const checkMatchInFlightRef = useRef(false)
 
   // =============================
   // 自分の待機開始時刻を取得
   // =============================
 
-  const loadMyQueue = async () => {
-    if (!userId) {
-      return
-    }
+  const loadMyQueue = useCallback(async (
+    targetUserId: string
+  ) => {
+    const requestId = ++queueRequestIdRef.current
 
     const { data, error } = await supabase
       .from('utaawase_queue')
       .select('joined_at')
-      .eq('user_id', userId)
+      .eq('user_id', targetUserId)
       .maybeSingle()
 
     if (error) {
@@ -70,19 +77,39 @@ export default function UtaawaseWaitingPage() {
         error
       )
 
+      return {
+        requestId,
+        targetUserId,
+        joinedAt: null,
+      }
+    }
+
+    return {
+      requestId,
+      targetUserId,
+      joinedAt: data?.joined_at ?? null,
+    }
+  }, [])
+
+  const applyMyQueueResult = useCallback((result: {
+    requestId: number
+    targetUserId: string
+    joinedAt: string | null
+  }) => {
+    if (
+      result.requestId !== queueRequestIdRef.current
+    ) {
       return
     }
 
-    if (data?.joined_at) {
-      setJoinedAt(data.joined_at)
-    }
-  }
+    setJoinedAt(result.joinedAt)
+  }, [])
 
   // =============================
   // 現在の待機人数
   // =============================
 
-  const loadWaitingCount = async () => {
+  const loadWaitingCount = useCallback(async () => {
     const { count, error } = await supabase
       .from('utaawase_queue')
       .select('*', {
@@ -105,13 +132,13 @@ export default function UtaawaseWaitingPage() {
         MAX_PLAYERS
       )
     )
-  }
+  }, [])
 
   // =============================
   // 自分の歌合が成立したか確認
   // =============================
 
-  const checkMyRoom = async () => {
+  const checkMyRoom = useCallback(async () => {
     if (
       !userId ||
       movingRef.current
@@ -153,13 +180,13 @@ export default function UtaawaseWaitingPage() {
     }
 
     return false
-  }
+  }, [router, userId])
 
   // =============================
   // 歌合開始判定
   // =============================
 
-  const tryStartMatch = async () => {
+  const tryStartMatch = useCallback(async () => {
     if (movingRef.current) {
       return
     }
@@ -189,17 +216,21 @@ export default function UtaawaseWaitingPage() {
         `/utaawase/${data}`
       )
     }
-  }
+  }, [router])
 
   // =============================
   // マッチング状態確認
   // =============================
 
-  const checkMatch = async () => {
-    if (movingRef.current) {
+  const checkMatch = useCallback(async () => {
+    if (
+      movingRef.current ||
+      checkMatchInFlightRef.current
+    ) {
       return
     }
 
+    checkMatchInFlightRef.current = true
     setErrorText('')
 
     try {
@@ -228,8 +259,14 @@ export default function UtaawaseWaitingPage() {
       setErrorText(
         'マッチング状況を確認できませんでした'
       )
+    } finally {
+      checkMatchInFlightRef.current = false
     }
-  }
+  }, [
+    checkMyRoom,
+    loadWaitingCount,
+    tryStartMatch,
+  ])
 
   // =============================
   // 初回処理
@@ -241,14 +278,26 @@ export default function UtaawaseWaitingPage() {
     }
 
     if (!userId) {
+      queueRequestIdRef.current += 1
       router.replace('/auth')
       return
     }
 
-    void loadMyQueue()
-    void loadWaitingCount()
-    void checkMatch()
-  }, [authLoading, userId])
+    void loadMyQueue(userId).then((result) => {
+      applyMyQueueResult(result)
+      void loadWaitingCount().then(() => {
+        void checkMatch()
+      })
+    })
+  }, [
+    applyMyQueueResult,
+    authLoading,
+    checkMatch,
+    loadMyQueue,
+    loadWaitingCount,
+    router,
+    userId,
+  ])
 
   // =============================
   // 3秒ごとに状態確認
@@ -273,7 +322,7 @@ export default function UtaawaseWaitingPage() {
     return () => {
       window.clearInterval(interval)
     }
-  }, [authLoading, userId])
+  }, [authLoading, checkMatch, userId])
 
   // =============================
   // 1分タイマー

@@ -342,9 +342,12 @@ export default function HaikuDetail() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
             {haiku.avatar_url ? (
-              <img 
+              <Image
                 src={haiku.avatar_url} 
                 alt="avatar" 
+                width={40}
+                height={40}
+                unoptimized
                 onClick={() => haiku.user_id && router.push(`/user/${haiku.user_id}`)}
                 style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', cursor: 'pointer' }} 
               />
