@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 import Image from 'next/image'
+import ShareButton from '../../components/ShareButton'
 
 type Haiku = {
   id: string
@@ -441,6 +442,11 @@ export default function HaikuDetail() {
             >
               <span style={{ fontSize: '1.1rem' }}>{isLiked ? '❤️' : '🤍'}</span> <span>{likeCount}</span>
             </button>
+            <ShareButton
+              title={`${haiku.author || '名無しの歌人'}の俳句`}
+              text={`${haiku.first_line} ${haiku.second_line} ${haiku.third_line}`}
+              path={`/haiku/${id}`}
+            />
 
             <button
               onClick={() => setIsReplyFormOpen(!isReplyFormOpen)}
