@@ -40,6 +40,16 @@ body {
   font-family: "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", "Times New Roman", serif;
 }
 
+@supports (padding: env(safe-area-inset-bottom)) {
+  .app-shell { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+}
+
+:focus-visible { outline: 3px solid var(--accent-gold); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
 body::before {
   content: "";
   position: fixed;

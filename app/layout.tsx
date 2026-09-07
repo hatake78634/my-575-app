@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "./components/ThemeProvider";
@@ -14,8 +14,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "歌会アプリ",
+  applicationName: "575／詩花",
+  title: "575／詩花",
   description: "俳句と返歌を楽しむ和風SNS",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "詩花", statusBarStyle: "black-translucent" },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#140d08",
 };
 
 export default function RootLayout({
