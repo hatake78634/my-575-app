@@ -76,6 +76,8 @@ export default function HaikuDetail() {
   // 返歌のいいね状態管理
   const [replyLikeCounts, setReplyLikeCounts] = useState<{ [key: string]: number }>({})
   const [userReplyLikes, setUserReplyLikes] = useState<{ [key: string]: boolean }>({})
+  const [bestReplyId, setBestReplyId] = useState<string | null>(null)
+  const [bestReplyUpdating, setBestReplyUpdating] = useState<string | null>(null)
 
   // データを取得・再取得するための関数をここで定義
   const fetchData = async (targetId: string) => {
@@ -154,6 +156,13 @@ export default function HaikuDetail() {
 
       const reversed = repliesData ? [...repliesData].reverse() : []
       setReplies(reversed)
+
+      const { data: bestReply } = await supabase
+        .from('haiku_best_replies')
+        .select('reply_id')
+        .eq('haiku_id', targetId)
+        .maybeSingle()
+      setBestReplyId(bestReply?.reply_id ? String(bestReply.reply_id) : null)
 
       // 5. 返歌のいいね取得
       const { data: replyLikesData } = await supabase.from('reply_likes_2').select('*')
@@ -261,6 +270,22 @@ export default function HaikuDetail() {
       setUserReplyLikes({ ...userReplyLikes, [replyId]: true })
       setReplyLikeCounts({ ...replyLikeCounts, [replyId]: (replyLikeCounts[replyId] || 0) + 1 })
     }
+  }
+
+  const handleBestReply = async (replyId: string) => {
+    if (!currentUserId || haiku?.user_id !== currentUserId || bestReplyUpdating) return
+    setBestReplyUpdating(replyId)
+    const { data, error } = await supabase.rpc('toggle_best_reply', {
+      p_haiku_id: id,
+      p_reply_id: replyId,
+    })
+    if (error) {
+      console.error('ベスト返歌更新エラー:', error)
+      alert('ベスト返歌を更新できませんでした。')
+    } else {
+      setBestReplyId(data ? String(data) : null)
+    }
+    setBestReplyUpdating(null)
   }
 
   const handleReplySubmit = async (e: React.FormEvent) => {
@@ -511,9 +536,11 @@ export default function HaikuDetail() {
               {replies.map((reply) => {
                 const isReplyLiked = userReplyLikes[reply.id] || false
                 const replyCount = replyLikeCounts[reply.id] || 0
+                const isBestReply = bestReplyId === String(reply.id)
 
                 return (
-                  <div key={reply.id} style={{ backgroundColor: '#1e1e1e', borderRadius: '16px', padding: '20px', border: '1px solid #2a2a2a' }}>
+                  <div key={reply.id} style={{ backgroundColor: '#1e1e1e', borderRadius: '16px', padding: '20px', border: isBestReply ? '1px solid #ffda79' : '1px solid #2a2a2a' }}>
+                    {isBestReply && <div style={{ color: '#ffda79', fontWeight: 'bold', marginBottom: 10 }}>金選・ベスト返歌</div>}
                     
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -557,6 +584,17 @@ export default function HaikuDetail() {
                       >
                         <span style={{ fontSize: '1.1rem' }}>{isReplyLiked ? '❤️' : '🤍'}</span> <span>{replyCount}</span>
                       </button>
+                      {haiku?.user_id === currentUserId && reply.user_id !== currentUserId && (
+                        <button
+                          type="button"
+                          onClick={() => handleBestReply(reply.id)}
+                          disabled={bestReplyUpdating !== null}
+                          className={isBestReply ? 'gold-button' : 'soft-button'}
+                          style={{ marginLeft: 'auto', padding: '7px 12px', cursor: bestReplyUpdating ? 'wait' : 'pointer' }}
+                        >
+                          {isBestReply ? '選出を解除' : 'ベスト返歌に選ぶ'}
+                        </button>
+                      )}
                     </div>
 
                   </div>

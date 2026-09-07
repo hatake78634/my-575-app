@@ -6,8 +6,8 @@
 | --- | --- | --- | --- | --- | --- |
 | プロフィール表示・編集 | 完成 | 既存実装を維持 | `/profile`, `/user/[id]` | `profiles_3` | 検証対象 |
 | 贔屓・好読者・歌友一覧 | 部分実装 | 一覧、タブ、歌人名検索、空・読込・エラー表示を追加 | `/following` | `follows`, `profiles_3` | 実装済み |
-| ベスト返歌 | 未実装 | 実装予定 | `/haiku/[id]` | `replies_2`、新規RPC | migration適用が必要 |
-| 称号 | 未実装 | 基盤実装予定 | `/rewards` | 新規カタログ／所有テーブル | migration適用が必要 |
+| ベスト返歌 | 未実装 | 選出・変更・解除、表示、作者検証RPCを追加 | `/haiku/[id]` | `haiku_best_replies`, `toggle_best_reply` | migration適用が必要 |
+| 称号 | 未実装 | カタログ、実績判定、所有、装備画面を追加 | `/titles` | `title_catalog`, `user_titles`, `user_equipped_titles`, 2 RPC | migration適用が必要。プロフィール共通表示は残作業 |
 | 師匠・弟子／一門図 | 未実装 | 基盤実装予定 | `/mentorship`, `/lineage/[id]` | 新規関係テーブル／RPC | migration適用が必要 |
 | フレンド歌会 | 部分実装 | 既存RPCと通知導線を優先して補完予定 | `/utaawase` | 既存歌会テーブル／RPC | 実DB仕様との結合確認が必要 |
 | 歌会演出 | 部分実装 | CSS演出を追加予定 | `/utaawase/[id]` | 変更なし | ロジックは変更しない |
