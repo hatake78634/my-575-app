@@ -58,7 +58,7 @@ export default function BottomNav({
         padding: '10px 0',
         zIndex: 90,
         boxShadow:
-          '0 -4px 10px rgba(0,0,0,0.3)',
+          '0 -4px 10px var(--shadow)',
       }}
     >
       {/* =====================

@@ -32,7 +32,7 @@
 :root[data-theme="yoi"] { --background: #090d20; --foreground: #eef0ff; --accent-gold: #9ea9e8; --accent-red: #7653a8; --page-background: #090d20; --page-background-end: #050714; --surface: #12172d; --surface-elevated: #1a2140; --surface-subtle: #0d1125; --foreground-muted: #b9c0e8; --border: #53609c; --border-subtle: rgba(158, 169, 232, .36); --input-background: #0d1125; --nav-background: #10152c; --modal-backdrop: rgba(3, 5, 18, .72); --primary: #b5c0ff; --primary-foreground: #12172d; --danger: #ff9ead; --success: #9fd9c0; --shadow: rgba(0, 0, 18, .48); }
 :root[data-theme="washi"] { --background: #241f17; --foreground: #f5eddc; --accent-gold: #b79858; --accent-red: #9d4b3d; --page-background: #241f17; --page-background-end: #15120d; --surface: #30291e; --surface-elevated: #403725; --surface-subtle: #211c14; --foreground-muted: #d4c6a9; --border: #82704d; --border-subtle: rgba(183, 152, 88, .36); --input-background: #211c14; --nav-background: #2a241a; --modal-backdrop: rgba(17, 14, 8, .7); --primary: #d2b36e; --primary-foreground: #2b2418; --danger: #e89a86; --success: #a9cb98; --shadow: rgba(12, 10, 5, .42); }
 
-.avatar-shell { display: inline-grid; place-items: center; flex: 0 0 auto; overflow: hidden; border-radius: 50%; background: #3a2a20; color: var(--accent-gold); }
+.avatar-shell { display: inline-grid; place-items: center; flex: 0 0 auto; overflow: hidden; border-radius: 50%; background: var(--surface-elevated); color: var(--accent-gold); }
 .avatar-shell img { width: 100%; height: 100%; object-fit: cover; }
 .avatar-frame-gold-ring { box-shadow: 0 0 0 3px #d9b864, 0 0 12px rgba(217, 184, 100, .45); }
 .avatar-frame-sakura-ring { box-shadow: 0 0 0 3px #eea6b8, 0 0 12px rgba(238, 166, 184, .45); }
@@ -49,8 +49,8 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(197, 160, 89, 0.16), transparent 38%),
-    radial-gradient(circle at bottom right, rgba(192, 57, 43, 0.14), transparent 30%),
+    radial-gradient(circle at top left, color-mix(in srgb, var(--accent-gold) 16%, transparent), transparent 38%),
+    radial-gradient(circle at bottom right, color-mix(in srgb, var(--accent-red) 14%, transparent), transparent 30%),
     linear-gradient(135deg, var(--page-background) 0%, var(--surface-elevated) 45%, var(--page-background-end) 100%);
   color: var(--foreground);
   font-family: "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", "Times New Roman", serif;
@@ -100,7 +100,7 @@ body::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(120deg, rgba(255, 255, 255, 0.06), transparent 45%, rgba(197, 160, 89, 0.08) 100%);
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.06), transparent 45%, color-mix(in srgb, var(--primary) 8%, transparent) 100%);
   pointer-events: none;
 }
 
@@ -153,6 +153,6 @@ body::before {
   font-weight: 600;
   line-height: 1.8;
   letter-spacing: 0.24em;
-  color: #f8ebd8;
+  color: var(--foreground);
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 }

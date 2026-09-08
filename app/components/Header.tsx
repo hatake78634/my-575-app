@@ -221,8 +221,8 @@ export default function Header({
                     borderRadius:
                       '999px',
                     backgroundColor:
-                      '#e85d5d',
-                    color: '#fff',
+                      'var(--danger)',
+                    color: 'var(--foreground)',
                     fontSize:
                       '0.6rem',
                     fontWeight:
@@ -321,7 +321,7 @@ export default function Header({
                     '10px',
                   padding: '8px',
                   boxShadow:
-                    '0 6px 20px rgba(0,0,0,0.45)',
+                    '0 6px 20px var(--shadow)',
                   zIndex: 300,
                 }}
               >
@@ -345,7 +345,7 @@ export default function Header({
                   style={{
                     ...menuButtonStyle,
                     color:
-                      '#ff7b7b',
+                      'var(--danger)',
                   }}
                 >
                   ↪ ログアウト

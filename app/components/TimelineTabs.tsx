@@ -50,7 +50,7 @@ export default function TimelineTabs({
               position: 'relative',
               background: 'none',
               border: 'none',
-              color: active ? '#fff' : '#777',
+              color: active ? 'var(--foreground)' : 'var(--foreground-muted)',
               padding: '14px 5px',
               fontSize: '0.95rem',
               fontWeight: active ? 'bold' : 'normal',

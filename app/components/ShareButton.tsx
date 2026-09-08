@@ -16,5 +16,5 @@ export default function ShareButton({ title, text, path, hashtags = ['詩花', '
       catch { setStatus('共有できませんでした') }
     }
   }
-  return <span><button type="button" className="soft-button" onClick={share} style={{ padding: '7px 12px', cursor: 'pointer' }}>共有</button>{status && <span role="status" style={{ marginLeft: 8, color: '#bda991', fontSize: 13 }}>{status}</span>}</span>
+  return <span><button type="button" className="soft-button" onClick={share} style={{ padding: '7px 12px', cursor: 'pointer' }}>共有</button>{status && <span role="status" style={{ marginLeft: 8, color: 'var(--foreground-muted)', fontSize: 13 }}>{status}</span>}</span>
 }
