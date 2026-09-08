@@ -322,7 +322,7 @@ export default function HaikuCard({
     <div
       style={{
         backgroundColor:
-          '#1e1e1e',
+          'var(--surface)',
 
         borderRadius:
           '16px',
@@ -414,7 +414,7 @@ export default function HaikuCard({
                 '50%',
 
               backgroundColor:
-                '#444',
+                'var(--surface-elevated)',
 
               cursor:
                 haiku.user_id
@@ -458,7 +458,7 @@ export default function HaikuCard({
                 '0.75rem',
 
               color:
-                '#888',
+                'var(--foreground-muted)',
             }}
           >
             {formatDate(
@@ -485,10 +485,10 @@ export default function HaikuCard({
               '12px',
 
             backgroundColor:
-              '#29251c',
+              'var(--surface-elevated)',
 
             border:
-              '1px solid #554923',
+              '1px solid var(--border)',
           }}
         >
           <div
@@ -527,7 +527,7 @@ export default function HaikuCard({
             <div
               style={{
                 color:
-                  '#aaa',
+                  'var(--foreground-muted)',
 
                 fontSize:
                   '0.72rem',
@@ -573,7 +573,7 @@ export default function HaikuCard({
                 <div
                   style={{
                     color:
-                      '#999',
+                      'var(--foreground-muted)',
 
                     fontSize:
                       '0.72rem',
@@ -595,7 +595,7 @@ export default function HaikuCard({
                 <div
                   style={{
                     color:
-                      '#ddd',
+                      'var(--foreground)',
 
                     fontSize:
                       '0.85rem',
@@ -617,7 +617,7 @@ export default function HaikuCard({
                 <div
                   style={{
                     color:
-                      '#aaa',
+                      'var(--foreground-muted)',
 
                     fontSize:
                       '0.72rem',
@@ -635,7 +635,7 @@ export default function HaikuCard({
               <div
                 style={{
                   color:
-                    '#ddd',
+                    'var(--foreground)',
 
                   fontSize:
                     '0.85rem',
@@ -665,7 +665,7 @@ export default function HaikuCard({
                       0
                     ) >= 0
                       ? 'var(--primary)'
-                      : '#ff8f8f',
+                      : 'var(--danger)',
 
                   fontSize:
                     '0.85rem',
@@ -703,7 +703,7 @@ export default function HaikuCard({
             '18px',
 
           color:
-            '#f0f0f0',
+            'var(--foreground)',
 
           textAlign:
             'center',
@@ -718,7 +718,7 @@ export default function HaikuCard({
                 '0.9rem',
 
               color:
-                '#b0a892',
+                'var(--foreground-muted)',
 
               marginBottom:
                 '10px',
@@ -845,13 +845,13 @@ export default function HaikuCard({
 
                   style={{
                     backgroundColor:
-                      '#302d24',
+                      'var(--surface-subtle)',
 
                     color:
                       'var(--primary)',
 
                     border:
-                      '1px solid #554d35',
+                      '1px solid var(--border)',
 
                     borderRadius:
                       '18px',
@@ -920,8 +920,8 @@ export default function HaikuCard({
 
             color:
               isLiked
-                ? '#ffb7c5'
-                : '#aaa',
+                ? 'var(--primary)'
+                : 'var(--foreground-muted)',
 
             display:
               'flex',
@@ -976,7 +976,7 @@ export default function HaikuCard({
               'pointer',
 
             color:
-              '#aaa',
+              'var(--foreground-muted)',
 
             display:
               'flex',

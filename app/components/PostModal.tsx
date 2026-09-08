@@ -5,6 +5,7 @@ import {
   KeyboardEvent,
   useState,
 } from 'react'
+import { Modal } from './ui'
 
 type PostModalProps = {
   isOpen: boolean
@@ -330,7 +331,7 @@ export default function PostModal({
   // =============================
 
   return (
-    <div
+    <Modal
       onClick={onClose}
       style={{
         position: 'fixed',
@@ -360,7 +361,7 @@ export default function PostModal({
         }
         style={{
           backgroundColor:
-            '#1e1e1e',
+            'var(--surface)',
 
           padding: '25px',
 
@@ -374,7 +375,7 @@ export default function PostModal({
           overflowY: 'auto',
 
           border:
-            '1px solid #333',
+            '1px solid var(--border)',
 
           boxShadow:
             '0 8px 24px var(--shadow)',
@@ -421,7 +422,7 @@ export default function PostModal({
                 'none',
 
               color:
-                '#aaa',
+                'var(--foreground-muted)',
 
               fontSize:
                 '1.2rem',
@@ -646,7 +647,7 @@ export default function PostModal({
                     tags.length ===
                     4
                       ? 'var(--primary)'
-                      : '#777',
+                      : 'var(--foreground-muted)',
                 }}
               >
                 {tags.length}
@@ -692,13 +693,13 @@ export default function PostModal({
 
                       style={{
                         backgroundColor:
-                          '#302d24',
+                          'var(--surface-subtle)',
 
                         color:
                           'var(--primary)',
 
                         border:
-                          '1px solid #554d35',
+                          '1px solid var(--border)',
 
                         borderRadius:
                           '20px',
@@ -806,14 +807,14 @@ export default function PostModal({
                       4 &&
                     tagInput.trim()
                       ? 'var(--primary)'
-                      : '#444',
+                      : 'var(--surface-elevated)',
 
                   color:
                     tags.length <
                       4 &&
                     tagInput.trim()
                       ? 'var(--primary-foreground)'
-                      : '#888',
+                      : 'var(--foreground-muted)',
 
                   fontWeight:
                     'bold',
@@ -845,7 +846,7 @@ export default function PostModal({
                 <span
                   style={{
                     color:
-                      '#ff6b6b',
+                      'var(--danger)',
                   }}
                 >
                   {tagError}
@@ -855,7 +856,7 @@ export default function PostModal({
                 <span
                   style={{
                     color:
-                      '#777',
+                      'var(--foreground-muted)',
                   }}
                 >
                   あと
@@ -927,13 +928,13 @@ export default function PostModal({
 
               backgroundColor:
                 isCompetitive
-                  ? '#29251c'
+                  ? 'var(--surface-elevated)'
                   : 'var(--surface)',
 
               border:
                 isCompetitive
-                  ? '1px solid #6b5a2e'
-                  : '1px solid #333',
+                  ? '1px solid var(--border)'
+                  : '1px solid var(--border)',
 
               borderRadius:
                 '12px',
@@ -973,7 +974,7 @@ export default function PostModal({
                 color:
                   canUseCompetitive
                     ? 'var(--foreground)'
-                    : '#666',
+                    : 'var(--foreground-muted)',
 
                 cursor:
                   canUseCompetitive
@@ -998,7 +999,7 @@ export default function PostModal({
                         ? 'var(--primary)'
                         : canUseCompetitive
                           ? 'var(--foreground)'
-                          : '#666',
+                          : 'var(--foreground-muted)',
                   }}
                 >
                   ⚔️ 勝負の俳句
@@ -1010,7 +1011,7 @@ export default function PostModal({
                       '0.72rem',
 
                     color:
-                      '#888',
+                      'var(--foreground-muted)',
 
                     marginTop:
                       '4px',
@@ -1043,7 +1044,7 @@ export default function PostModal({
                   backgroundColor:
                     isCompetitive
                       ? 'var(--primary)'
-                      : '#444',
+                      : 'var(--surface-elevated)',
 
                   transition:
                     '0.2s',
@@ -1077,7 +1078,7 @@ export default function PostModal({
                     backgroundColor:
                       isCompetitive
                         ? 'var(--primary-foreground)'
-                        : '#aaa',
+                        : 'var(--foreground-muted)',
 
                     transition:
                       '0.2s',
@@ -1098,7 +1099,7 @@ export default function PostModal({
                     '12px',
 
                   borderTop:
-                    '1px solid #443c29',
+                    '1px solid var(--border)',
 
                   fontSize:
                     '0.76rem',
@@ -1107,7 +1108,7 @@ export default function PostModal({
                     '1.7',
 
                   color:
-                    '#c9bea0',
+                    'var(--foreground-muted)',
                 }}
               >
                 <div
@@ -1145,7 +1146,7 @@ export default function PostModal({
                     '0.75rem',
 
                   color:
-                    '#888',
+                    'var(--foreground-muted)',
                 }}
               >
                 今日の勝負句3句をすべて詠み終えています。
@@ -1177,7 +1178,7 @@ export default function PostModal({
 
               backgroundColor:
                 isCompetitive
-                  ? '#e7c665'
+                  ? 'var(--primary)'
                   : 'var(--primary)',
 
               color:
@@ -1210,7 +1211,7 @@ export default function PostModal({
           </button>
         </form>
       </div>
-    </div>
+    </Modal>
   )
 }
 
@@ -1247,7 +1248,7 @@ function CharacterCounter({
       <span
         style={{
           color:
-            '#aaa',
+            'var(--foreground-muted)',
         }}
       >
         {length}/{max}文字
@@ -1257,7 +1258,7 @@ function CharacterCounter({
         style={{
           color:
             error
-              ? '#ff6b6b'
+              ? 'var(--danger)'
               : 'transparent',
         }}
       >
@@ -1276,7 +1277,7 @@ const labelStyle = {
     '0.8rem',
 
   color:
-    '#aaa',
+    'var(--foreground-muted)',
 
   display:
     'block',
@@ -1299,10 +1300,10 @@ const inputStyle = {
     '8px',
 
   border:
-    '1px solid #444',
+    '1px solid var(--border)',
 
   backgroundColor:
-    'var(--border)',
+    'var(--input-background)',
 
   color:
     'var(--foreground)',
