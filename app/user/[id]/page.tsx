@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import {
   useCallback,
   useEffect,
@@ -19,6 +18,7 @@ import HaikuCard, {
 } from '../../components/HaikuCard'
 
 import BottomNav from '../../components/BottomNav'
+import Avatar from '../../components/Avatar'
 
 import { useAuth } from '../../hooks/useAuth'
 
@@ -1129,37 +1129,22 @@ export default function UserPage() {
               {/* アイコン */}
 
               {profile?.avatar_url ? (
-                <Image
+                <Avatar
                   src={
                     profile.avatar_url
                   }
 
-                  alt={`${
+                  name={
                     profile.username ??
                     '歌人'
-                  }のアイコン`}
+                  }
 
-                  width={80}
-                  height={80}
+                  size={80}
 
                   style={{
-                    width:
-                      '80px',
-
-                    height:
-                      '80px',
-
-                    borderRadius:
-                      '50%',
-
-                    objectFit:
-                      'cover',
-
                     border:
                       '2px solid var(--border)',
                   }}
-
-                  unoptimized
                 />
               ) : (
                 <div

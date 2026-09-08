@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
-import Image from 'next/image'
+import Avatar from '../../components/Avatar'
 import ShareButton from '../../components/ShareButton'
 
 type Haiku = {
@@ -368,14 +368,12 @@ export default function HaikuDetail() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
             {haiku.avatar_url ? (
-              <Image
+              <Avatar
                 src={haiku.avatar_url} 
-                alt="avatar" 
-                width={40}
-                height={40}
-                unoptimized
+                name={haiku.author}
+                size={40}
                 onClick={() => haiku.user_id && router.push(`/user/${haiku.user_id}`)}
-                style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', cursor: 'pointer' }} 
+                style={{ cursor: 'pointer' }}
               />
             ) : (
               <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--surface-elevated)' }} />
@@ -551,13 +549,10 @@ export default function HaikuDetail() {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {reply.avatar_url && (
-                          <Image
+                          <Avatar
                             src={reply.avatar_url}
-                            alt="avatar"
-                            width={28}
-                            height={28}
-                            style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }}
-                            unoptimized
+                            name={reply.author}
+                            size={28}
                           />
                         )}
                         <span style={{ color: 'var(--foreground)', fontSize: '0.9rem', fontWeight: 'bold' }}>

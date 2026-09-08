@@ -11,10 +11,10 @@ import {
   useRouter,
   useSearchParams,
 } from 'next/navigation'
-import Image from 'next/image'
 
 import { supabase } from '../../lib/supabase'
 import BottomNav from '../components/BottomNav'
+import Avatar from '../components/Avatar'
 import HaikuCard, {
   Haiku,
 } from '../components/HaikuCard'
@@ -1550,24 +1550,12 @@ function UserResults({
             }}
           >
             {user.avatar_url ? (
-              <Image
+              <Avatar
                 src={
                   user.avatar_url
                 }
-                alt=""
-                width={46}
-                height={46}
-                unoptimized
-                style={{
-                  width:
-                    '46px',
-                  height:
-                    '46px',
-                  borderRadius:
-                    '50%',
-                  objectFit:
-                    'cover',
-                }}
+                name={user.username}
+                size={46}
               />
             ) : (
               <div

@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import {
   useCallback,
   useEffect,
@@ -12,6 +11,7 @@ import { useRouter } from 'next/navigation'
 
 import { supabase } from '../../lib/supabase'
 import BottomNav from '../components/BottomNav'
+import Avatar from '../components/Avatar'
 import { useAuth } from '../hooks/useAuth'
 
 // =============================
@@ -828,18 +828,13 @@ function RankingRow({
       {/* アイコン */}
 
       {profile.avatar_url ? (
-        <Image
+        <Avatar
           src={profile.avatar_url}
-          alt={`${profile.username ?? '歌人'}のアイコン`}
-          width={42}
-          height={42}
+          name={profile.username ?? '歌人'}
+          size={42}
           style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '50%',
-            objectFit: 'cover',
+            flexShrink: 0,
           }}
-          unoptimized
         />
       ) : (
         <div

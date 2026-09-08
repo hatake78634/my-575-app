@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import Avatar from './Avatar'
 
 export type Haiku = {
   id: string
@@ -359,18 +359,17 @@ export default function HaikuCard({
         {/* アイコン */}
 
         {haiku.avatar_url ? (
-          <Image
+          <Avatar
             src={
               haiku.avatar_url
             }
 
-            alt={`${
+            name={
               haiku.author ||
               '歌人'
-            }のアイコン`}
+            }
 
-            width={40}
-            height={40}
+            size={40}
 
             onClick={
               openUser
@@ -394,8 +393,6 @@ export default function HaikuCard({
                   ? 'pointer'
                   : 'default',
             }}
-
-            unoptimized
           />
         ) : (
           <div

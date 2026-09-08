@@ -8,7 +8,6 @@ import {
   useState,
 } from 'react'
 
-import Image from 'next/image'
 import {
   useRouter,
 } from 'next/navigation'
@@ -18,6 +17,7 @@ import {
 } from '../../lib/supabase'
 
 import BottomNav from '../components/BottomNav'
+import Avatar from '../components/Avatar'
 import {
   useAuth,
 } from '../hooks/useAuth'
@@ -1129,33 +1129,14 @@ function NotificationCard({
         }}
       >
         {item.actor_avatar_url ? (
-          <Image
+          <Avatar
             src={
               item.actor_avatar_url
             }
 
-            alt=""
+            name={item.actor_username}
 
-            width={
-              42
-            }
-
-            height={
-              42
-            }
-
-            style={{
-              width:
-                '100%',
-
-              height:
-                '100%',
-
-              objectFit:
-                'cover',
-            }}
-
-            unoptimized
+            size={42}
           />
         ) : (
           <span>
