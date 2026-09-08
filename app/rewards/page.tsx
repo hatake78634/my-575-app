@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '@/lib/supabase'
+import { AppShell, Button, LoadingState, Surface } from '../components/ui'
 
 type Task = { id: string; name: string; description: string; reward: number }
 type RewardResult = { requestId: number; userId: string; tasks: Task[]; balance: number; errorText: string }
@@ -31,5 +32,5 @@ export default function RewardsPage() {
     else { setBalance(Number(result.data)); setMessage('報酬を受け取りました。') }
   }
   const loading = authLoading || (!!userId && loaded !== userId)
-  return <main className="app-shell" style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px 96px' }}><h1 style={{ color: '#ffda79' }}>今日のご褒美</h1>{loading ? <p role="status">読み込み中です…</p> : !userId ? <p>ログインすると報酬を受け取れます。</p> : <><h2>残高: {balance ?? 0} コイン</h2>{message && <p role="status">{message}</p>}<button className="gold-button" onClick={() => claim('login')} style={{ padding: '10px 16px' }}>本日のログイン報酬を受け取る</button><h2>デイリー</h2><div style={{ display: 'grid', gap: 10 }}>{tasks.map((task) => <article className="panel-card" key={task.id} style={{ padding: 16 }}><h3>{task.name}</h3><p>{task.description}</p><button className="soft-button" onClick={() => claim('task', task.id)} style={{ padding: '8px 12px' }}>{task.reward} コインを受け取る</button></article>)}</div></>}</main>
+  return <AppShell><h1 style={{ color: 'var(--primary)' }}>今日のご褒美</h1>{loading ? <LoadingState /> : !userId ? <p>ログインすると報酬を受け取れます。</p> : <><h2>残高: {balance ?? 0} コイン</h2>{message && <p className="ui-status" role="status">{message}</p>}<Button variant="primary" onClick={() => claim('login')}>本日のログイン報酬を受け取る</Button><h2>デイリー</h2><div style={{ display: 'grid', gap: 10 }}>{tasks.map((task) => <Surface key={task.id} style={{ padding: 16 }}><h3>{task.name}</h3><p>{task.description}</p><Button onClick={() => claim('task', task.id)}>{task.reward} コインを受け取る</Button></Surface>)}</div></>}</AppShell>
 }

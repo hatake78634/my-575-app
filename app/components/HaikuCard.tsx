@@ -331,10 +331,10 @@ export default function HaikuCard({
           '20px',
 
         border:
-          '1px solid #2a2a2a',
+          '1px solid var(--border)',
 
         boxShadow:
-          '0 4px 12px rgba(0,0,0,0.3)',
+          '0 4px 12px var(--shadow)',
       }}
     >
       {/* =====================
@@ -445,7 +445,7 @@ export default function HaikuCard({
                   : 'default',
 
               color:
-                '#fff',
+                'var(--foreground)',
             }}
           >
             {haiku.author ||
@@ -512,7 +512,7 @@ export default function HaikuCard({
             <div
               style={{
                 color:
-                  '#ffda79',
+                  'var(--primary)',
 
                 fontWeight:
                   'bold',
@@ -551,7 +551,7 @@ export default function HaikuCard({
                       '0.9rem',
 
                     color:
-                      '#fff',
+                      'var(--foreground)',
 
                     marginBottom:
                       '4px',
@@ -664,7 +664,7 @@ export default function HaikuCard({
                       haiku.battle_rating_change ??
                       0
                     ) >= 0
-                      ? '#ffda79'
+                      ? 'var(--primary)'
                       : '#ff8f8f',
 
                   fontSize:
@@ -848,7 +848,7 @@ export default function HaikuCard({
                       '#302d24',
 
                     color:
-                      '#ffda79',
+                      'var(--primary)',
 
                     border:
                       '1px solid #554d35',
@@ -889,7 +889,7 @@ export default function HaikuCard({
             '20px',
 
           borderTop:
-            '1px solid #2a2a2a',
+            '1px solid var(--border)',
 
           paddingTop:
             '12px',

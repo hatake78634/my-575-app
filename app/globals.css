@@ -6,15 +6,31 @@
   --accent-gold: #c5a059;
   --accent-red: #c0392b;
   --ink: #24160e;
+  --page-background: #140d08;
+  --page-background-end: #0b0705;
+  --surface: #1e1610;
+  --surface-elevated: #29180f;
+  --surface-subtle: #160f0b;
+  --foreground-muted: #bda991;
+  --border: #6f5636;
+  --border-subtle: rgba(197, 160, 89, 0.34);
+  --input-background: #160f0b;
+  --nav-background: #1a1a1a;
+  --modal-backdrop: rgba(0, 0, 0, 0.65);
+  --primary: #ffda79;
+  --primary-foreground: #24160e;
+  --danger: #ff8d8d;
+  --success: #8fd3a1;
+  --shadow: rgba(0, 0, 0, 0.35);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-:root[data-theme="sakura"] { --background: #241218; --foreground: #fff0f3; --accent-gold: #ef9aae; --accent-red: #c95070; }
-:root[data-theme="yoi"] { --background: #090d20; --foreground: #eef0ff; --accent-gold: #9ea9e8; --accent-red: #7653a8; }
-:root[data-theme="washi"] { --background: #241f17; --foreground: #f5eddc; --accent-gold: #b79858; --accent-red: #9d4b3d; }
+:root[data-theme="sakura"] { --background: #241218; --foreground: #fff0f3; --accent-gold: #ef9aae; --accent-red: #c95070; --page-background: #241218; --page-background-end: #12080d; --surface: #321920; --surface-elevated: #44232d; --surface-subtle: #1c0f14; --foreground-muted: #e3acb9; --border: #9d5366; --border-subtle: rgba(239, 154, 174, .36); --input-background: #1c0f14; --nav-background: #29151d; --modal-backdrop: rgba(27, 6, 13, .7); --primary: #ef9aae; --primary-foreground: #32131d; --danger: #ff9bb3; --success: #a9dfbd; --shadow: rgba(20, 4, 10, .42); }
+:root[data-theme="yoi"] { --background: #090d20; --foreground: #eef0ff; --accent-gold: #9ea9e8; --accent-red: #7653a8; --page-background: #090d20; --page-background-end: #050714; --surface: #12172d; --surface-elevated: #1a2140; --surface-subtle: #0d1125; --foreground-muted: #b9c0e8; --border: #53609c; --border-subtle: rgba(158, 169, 232, .36); --input-background: #0d1125; --nav-background: #10152c; --modal-backdrop: rgba(3, 5, 18, .72); --primary: #b5c0ff; --primary-foreground: #12172d; --danger: #ff9ead; --success: #9fd9c0; --shadow: rgba(0, 0, 18, .48); }
+:root[data-theme="washi"] { --background: #241f17; --foreground: #f5eddc; --accent-gold: #b79858; --accent-red: #9d4b3d; --page-background: #241f17; --page-background-end: #15120d; --surface: #30291e; --surface-elevated: #403725; --surface-subtle: #211c14; --foreground-muted: #d4c6a9; --border: #82704d; --border-subtle: rgba(183, 152, 88, .36); --input-background: #211c14; --nav-background: #2a241a; --modal-backdrop: rgba(17, 14, 8, .7); --primary: #d2b36e; --primary-foreground: #2b2418; --danger: #e89a86; --success: #a9cb98; --shadow: rgba(12, 10, 5, .42); }
 
 .avatar-shell { display: inline-grid; place-items: center; flex: 0 0 auto; overflow: hidden; border-radius: 50%; background: #3a2a20; color: var(--accent-gold); }
 .avatar-shell img { width: 100%; height: 100%; object-fit: cover; }
@@ -35,7 +51,7 @@ body {
   background:
     radial-gradient(circle at top left, rgba(197, 160, 89, 0.16), transparent 38%),
     radial-gradient(circle at bottom right, rgba(192, 57, 43, 0.14), transparent 30%),
-    linear-gradient(135deg, #140d08 0%, #22140e 45%, #0b0705 100%);
+    linear-gradient(135deg, var(--page-background) 0%, var(--surface-elevated) 45%, var(--page-background-end) 100%);
   color: var(--foreground);
   font-family: "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", "Times New Roman", serif;
 }
@@ -68,15 +84,15 @@ body::before {
 .app-shell {
   min-height: 100vh;
   padding-bottom: 80px;
-  color: #f7ebdc;
+  color: var(--foreground);
 }
 
 .panel-card {
   position: relative;
-  background: linear-gradient(145deg, rgba(41, 24, 15, 0.97), rgba(24, 16, 11, 0.92));
-  border: 1px solid rgba(197, 160, 89, 0.34);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--surface-elevated) 97%, transparent), color-mix(in srgb, var(--surface) 92%, transparent));
+  border: 1px solid var(--border-subtle);
   border-radius: 22px;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 40px var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   overflow: hidden;
 }
 
@@ -92,25 +108,44 @@ body::before {
   content: "";
   position: absolute;
   inset: 1px;
-  border: 1px solid rgba(197, 160, 89, 0.16);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 48%, transparent);
   border-radius: 21px;
   pointer-events: none;
 }
 
 .soft-button {
-  border: 1px solid rgba(197, 160, 89, 0.36);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(197, 160, 89, 0.12));
-  color: #f8ebd8;
+  border: 1px solid var(--border-subtle);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), color-mix(in srgb, var(--primary) 12%, transparent));
+  color: var(--foreground);
   border-radius: 999px;
   backdrop-filter: blur(8px);
 }
 
 .gold-button {
-  background: linear-gradient(135deg, #f0d38a 0%, #c5a059 40%, #a57a2d 100%);
-  color: #24160e;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 74%, white) 0%, var(--primary) 40%, var(--accent-gold) 100%);
+  color: var(--primary-foreground);
   border: none;
-  box-shadow: 0 10px 24px rgba(197, 160, 89, 0.25);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--primary) 25%, transparent);
 }
+
+.ui-shell { width: min(100%, 720px); margin: 0 auto; padding: 24px 16px 96px; }
+.ui-surface { position: relative; border: 1px solid var(--border-subtle); border-radius: 16px; background: var(--surface); box-shadow: 0 10px 24px var(--shadow); }
+.ui-surface-elevated { background: var(--surface-elevated); }
+.ui-button { border-radius: 999px; padding: 8px 12px; cursor: pointer; font: inherit; }
+.ui-button-primary { border: none; background: var(--primary); color: var(--primary-foreground); box-shadow: 0 10px 24px color-mix(in srgb, var(--primary) 25%, transparent); }
+.ui-button-secondary { border: 1px solid var(--border-subtle); background: color-mix(in srgb, var(--surface-elevated) 88%, transparent); color: var(--foreground); }
+.ui-button-danger { border: 1px solid color-mix(in srgb, var(--danger) 60%, var(--border)); background: color-mix(in srgb, var(--danger) 16%, var(--surface)); color: var(--danger); }
+.ui-button:disabled { cursor: not-allowed; opacity: .55; }
+.ui-field { width: 100%; border: 1px solid var(--border); border-radius: 12px; background: var(--input-background); color: var(--foreground); padding: 10px 12px; font: inherit; }
+.ui-field::placeholder { color: var(--foreground-muted); opacity: .75; }
+.ui-tabs { display: flex; gap: 8px; }
+.ui-tab { flex: 1; }
+.ui-muted { color: var(--foreground-muted); }
+.ui-link { color: var(--primary); }
+.ui-status { color: var(--foreground-muted); }
+.ui-error { color: var(--danger); }
+.ui-empty { color: var(--foreground-muted); }
+.ui-modal-backdrop { background: var(--modal-backdrop); }
 
 .haiku-line {
   font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP", serif;

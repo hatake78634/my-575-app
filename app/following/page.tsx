@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '@/lib/supabase'
+import Avatar from '../components/Avatar'
+import { AppShell, Button, EmptyState, ErrorState, Field, LoadingState, Surface, Tabs } from '../components/ui'
 
 type RelationshipTab = 'following' | 'followers' | 'mutual'
 
@@ -130,72 +131,69 @@ export default function FollowingPage() {
   )
 
   return (
-    <main className="app-shell" style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px 96px' }}>
+    <AppShell>
       <header style={{ marginBottom: 20 }}>
-        <h1 style={{ margin: 0, color: '#ffda79' }}>歌人のつながり</h1>
-        <p style={{ color: '#bda991', marginBottom: 0 }}>贔屓、好読者、歌友を確認できます。</p>
+        <h1 style={{ margin: 0, color: 'var(--primary)' }}>歌人のつながり</h1>
+        <p className="ui-muted" style={{ marginBottom: 0 }}>贔屓、好読者、歌友を確認できます。</p>
       </header>
 
-      <div role="tablist" aria-label="関係の種類" style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+      <Tabs role="tablist" aria-label="関係の種類" style={{ marginBottom: 16 }}>
         {tabs.map((tab) => (
-          <button
+          <Button
             key={tab.key}
             type="button"
             role="tab"
             aria-selected={activeTab === tab.key}
-            className={activeTab === tab.key ? 'gold-button' : 'soft-button'}
+            variant={activeTab === tab.key ? 'primary' : 'secondary'}
             onClick={() => setActiveTab(tab.key)}
-            style={{ flex: 1, padding: '10px 12px', cursor: 'pointer' }}
+            className="ui-tab"
+            style={{ padding: '10px 12px' }}
           >
             {tab.label}
-          </button>
+          </Button>
         ))}
-      </div>
+      </Tabs>
 
       <label style={{ display: 'grid', gap: 6, marginBottom: 18 }}>
-        <span style={{ color: '#d7c2a7', fontSize: 14 }}>歌人名で検索</span>
-        <input
+        <span className="ui-muted" style={{ fontSize: 14 }}>歌人名で検索</span>
+        <Field
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="歌人名を入力"
-          style={{ borderRadius: 12, border: '1px solid #6f5636', background: '#160f0b', color: '#fff', padding: 12 }}
+          style={{ padding: 12 }}
         />
       </label>
 
       {loading ? (
-        <p role="status" style={{ color: '#bda991' }}>読み込み中です…</p>
+        <LoadingState />
       ) : !userId ? (
-        <div className="panel-card" style={{ padding: 22 }}>
+        <Surface style={{ padding: 22 }}>
           <p>一覧を見るにはログインしてください。</p>
-          <Link href="/auth" style={{ color: '#ffda79' }}>ログインへ</Link>
-        </div>
+          <Link href="/auth" className="ui-link">ログインへ</Link>
+        </Surface>
       ) : errorText ? (
-        <p role="alert" style={{ color: '#ff8d8d' }}>{errorText}</p>
+        <ErrorState>{errorText}</ErrorState>
       ) : visibleProfiles.length === 0 ? (
-        <p style={{ color: '#bda991' }}>{normalizedQuery ? '該当する歌人はいません。' : 'まだ該当する歌人はいません。'}</p>
+        <EmptyState>{normalizedQuery ? '該当する歌人はいません。' : 'まだ該当する歌人はいません。'}</EmptyState>
       ) : (
         <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 10 }}>
           {visibleProfiles.map((profile) => (
             <li key={profile.id}>
               <Link
                 href={`/user/${profile.id}`}
-                className="panel-card"
+                className="ui-surface"
                 style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, color: 'inherit', textDecoration: 'none' }}
               >
-                <div aria-hidden="true" style={{ width: 48, height: 48, borderRadius: '50%', overflow: 'hidden', background: '#3a2a20', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                  {profile.avatar_url ? (
-                    <Image src={profile.avatar_url} alt="" width={48} height={48} unoptimized style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : '歌'}
-                </div>
+                <Avatar src={profile.avatar_url} name={profile.username} size={48} />
                 <div style={{ minWidth: 0 }}>
                   <strong>{profile.username || '名無しの歌人'}</strong>
-                  {profile.bio && <p style={{ color: '#bda991', margin: '4px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{profile.bio}</p>}
+                  {profile.bio && <p className="ui-muted" style={{ margin: '4px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{profile.bio}</p>}
                 </div>
               </Link>
             </li>
           ))}
         </ul>
       )}
-    </main>
+    </AppShell>
   )
 }

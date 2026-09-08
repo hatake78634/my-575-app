@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '@/lib/supabase'
+import { AppShell, Button, ErrorState, LoadingState, Surface } from '../components/ui'
 
 type Product = { id: string; name: string; description: string; price: number }
 type ShopResult = { requestId: number; userId: string; products: Product[]; owned: string[]; balance: number; errorText: string }
@@ -47,8 +48,8 @@ export default function ShopPage() {
     setBuying(null)
   }
   const loading = authLoading || (!!userId && loaded !== userId)
-  return <main className="app-shell" style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px 96px' }}>
-    <h1 style={{ color: '#ffda79' }}>通常ショップ</h1><p>内容と価格が決まった商品のみを扱います。ランダム販売はありません。</p>
-    {loading ? <p role="status">読み込み中です…</p> : !userId ? <p><Link href="/auth" style={{ color: '#ffda79' }}>ログイン</Link>が必要です。</p> : <><h2>残高: {balance ?? 0} コイン</h2>{errorText && <p role="alert" style={{ color: '#ff8d8d' }}>{errorText}</p>}<div style={{ display: 'grid', gap: 10 }}>{products.map((product) => <article key={product.id} className="panel-card" style={{ padding: 16 }}><h2>{product.name}</h2><p>{product.description}</p><button className={owned.has(product.id) ? 'soft-button' : 'gold-button'} disabled={owned.has(product.id) || buying !== null} onClick={() => buy(product.id)} style={{ padding: '9px 14px' }}>{owned.has(product.id) ? '所持済み' : `${product.price} コインで購入`}</button></article>)}</div><p><Link href="/customize" style={{ color: '#ffda79' }}>着せ替えへ →</Link></p></>}
-  </main>
+  return <AppShell>
+    <h1 style={{ color: 'var(--primary)' }}>通常ショップ</h1><p>内容と価格が決まった商品のみを扱います。ランダム販売はありません。</p>
+    {loading ? <LoadingState /> : !userId ? <p><Link href="/auth" className="ui-link">ログイン</Link>が必要です。</p> : <><h2>残高: {balance ?? 0} コイン</h2>{errorText && <ErrorState>{errorText}</ErrorState>}<div style={{ display: 'grid', gap: 10 }}>{products.map((product) => <Surface key={product.id} style={{ padding: 16 }}><h2>{product.name}</h2><p>{product.description}</p><Button variant={owned.has(product.id) ? 'secondary' : 'primary'} disabled={owned.has(product.id) || buying !== null} onClick={() => buy(product.id)}>{owned.has(product.id) ? '所持済み' : `${product.price} コインで購入`}</Button></Surface>)}</div><p><Link href="/customize" className="ui-link">着せ替えへ →</Link></p></>}
+  </AppShell>
 }

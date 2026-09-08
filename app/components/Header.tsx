@@ -136,7 +136,7 @@ export default function Header({
         <span
           style={{
             fontSize: '0.8rem',
-            color: '#aaa',
+            color: 'var(--foreground-muted)',
             letterSpacing: '2px',
           }}
         >
@@ -162,7 +162,7 @@ export default function Header({
           style={{
             background: 'none',
             border: 'none',
-            color: '#ddd',
+            color: 'var(--foreground)',
             fontSize: '1.4rem',
             cursor: 'pointer',
             padding: '4px',
@@ -195,7 +195,7 @@ export default function Header({
                   'center',
                 background: 'none',
                 border: 'none',
-                color: '#ddd',
+                color: 'var(--foreground)',
                 fontSize: '1.35rem',
                 cursor: 'pointer',
                 padding: 0,
@@ -231,7 +231,7 @@ export default function Header({
                     boxSizing:
                       'border-box',
                     border:
-                      '2px solid #121212',
+                      '2px solid var(--nav-background)',
                   }}
                 >
                   {unreadCount > 99
@@ -259,7 +259,7 @@ export default function Header({
                   objectFit: 'cover',
                   cursor: 'pointer',
                   border:
-                    '1px solid #444',
+                    '1px solid var(--border)',
                 }}
                 unoptimized
               />
@@ -277,10 +277,10 @@ export default function Header({
                   height: '38px',
                   borderRadius: '50%',
                   border:
-                    '1px solid #555',
+                    '1px solid var(--border)',
                   backgroundColor:
-                    '#2a2a2a',
-                  color: '#ddd',
+                  'var(--surface)',
+                  color: 'var(--foreground)',
                   cursor: 'pointer',
                   fontSize: '1rem',
                 }}
@@ -298,7 +298,7 @@ export default function Header({
                 style={{
                   listStyle: 'none',
                   cursor: 'pointer',
-                  color: '#aaa',
+                  color: 'var(--foreground-muted)',
                   fontSize: '1.3rem',
                   padding: '3px',
                 }}
@@ -314,9 +314,9 @@ export default function Header({
                   right: 0,
                   width: '150px',
                   backgroundColor:
-                    '#1e1e1e',
+                    'var(--surface-elevated)',
                   border:
-                    '1px solid #333',
+                    '1px solid var(--border)',
                   borderRadius:
                     '10px',
                   padding: '8px',
@@ -361,8 +361,8 @@ export default function Header({
             }
             style={{
               backgroundColor:
-                '#ffda79',
-              color: '#121212',
+                'var(--primary)',
+              color: 'var(--primary-foreground)',
               border: 'none',
               padding:
                 '8px 15px',
@@ -388,7 +388,7 @@ const menuButtonStyle = {
   textAlign: 'left' as const,
   background: 'none',
   border: 'none',
-  color: '#ddd',
+  color: 'var(--foreground)',
   padding: '10px',
   borderRadius: '7px',
   cursor: 'pointer',

@@ -340,7 +340,7 @@ export default function PostModal({
         height: '100vh',
 
         backgroundColor:
-          'rgba(0, 0, 0, 0.7)',
+          'var(--modal-backdrop)',
 
         display: 'flex',
         alignItems: 'center',
@@ -377,7 +377,7 @@ export default function PostModal({
             '1px solid #333',
 
           boxShadow:
-            '0 8px 24px rgba(0,0,0,0.5)',
+            '0 8px 24px var(--shadow)',
         }}
       >
         {/* =====================
@@ -645,7 +645,7 @@ export default function PostModal({
                   color:
                     tags.length ===
                     4
-                      ? '#ffda79'
+                      ? 'var(--primary)'
                       : '#777',
                 }}
               >
@@ -695,7 +695,7 @@ export default function PostModal({
                           '#302d24',
 
                         color:
-                          '#ffda79',
+                          'var(--primary)',
 
                         border:
                           '1px solid #554d35',
@@ -805,14 +805,14 @@ export default function PostModal({
                     tags.length <
                       4 &&
                     tagInput.trim()
-                      ? '#ffda79'
+                      ? 'var(--primary)'
                       : '#444',
 
                   color:
                     tags.length <
                       4 &&
                     tagInput.trim()
-                      ? '#121212'
+                      ? 'var(--primary-foreground)'
                       : '#888',
 
                   fontWeight:
@@ -867,7 +867,7 @@ export default function PostModal({
                 <span
                   style={{
                     color:
-                      '#ffda79',
+                      'var(--primary)',
                   }}
                 >
                   4枚の札が付いています
@@ -928,7 +928,7 @@ export default function PostModal({
               backgroundColor:
                 isCompetitive
                   ? '#29251c'
-                  : '#181818',
+                  : 'var(--surface)',
 
               border:
                 isCompetitive
@@ -972,7 +972,7 @@ export default function PostModal({
 
                 color:
                   canUseCompetitive
-                    ? '#fff'
+                    ? 'var(--foreground)'
                     : '#666',
 
                 cursor:
@@ -995,9 +995,9 @@ export default function PostModal({
 
                     color:
                       isCompetitive
-                        ? '#ffda79'
+                        ? 'var(--primary)'
                         : canUseCompetitive
-                          ? '#fff'
+                          ? 'var(--foreground)'
                           : '#666',
                   }}
                 >
@@ -1042,7 +1042,7 @@ export default function PostModal({
 
                   backgroundColor:
                     isCompetitive
-                      ? '#ffda79'
+                      ? 'var(--primary)'
                       : '#444',
 
                   transition:
@@ -1076,7 +1076,7 @@ export default function PostModal({
 
                     backgroundColor:
                       isCompetitive
-                        ? '#121212'
+                        ? 'var(--primary-foreground)'
                         : '#aaa',
 
                     transition:
@@ -1113,7 +1113,7 @@ export default function PostModal({
                 <div
                   style={{
                     color:
-                      '#ffda79',
+                      'var(--primary)',
 
                     fontWeight:
                       'bold',
@@ -1178,10 +1178,10 @@ export default function PostModal({
               backgroundColor:
                 isCompetitive
                   ? '#e7c665'
-                  : '#ffda79',
+                  : 'var(--primary)',
 
               color:
-                '#121212',
+                'var(--primary-foreground)',
 
               fontWeight:
                 'bold',
@@ -1302,10 +1302,10 @@ const inputStyle = {
     '1px solid #444',
 
   backgroundColor:
-    '#2a2a2a',
+    'var(--border)',
 
   color:
-    '#fff',
+    'var(--foreground)',
 
   outline:
     'none',

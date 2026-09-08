@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '@/lib/supabase'
+import { AppShell, Button, ErrorState, LoadingState, Surface } from '../components/ui'
 
 type TitleItem = {
   id: string
@@ -97,35 +98,35 @@ export default function TitlesPage() {
   const loading = authLoading || (userId !== null && loadedUserId !== userId)
 
   return (
-    <main className="app-shell" style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px 96px' }}>
-      <Link href={userId ? `/user/${userId}` : '/'} style={{ color: '#d7c2a7' }}>← 戻る</Link>
-      <h1 style={{ color: '#ffda79' }}>称号</h1>
-      <p style={{ color: '#bda991' }}>歩みから得た称号を一つだけ掲げられます。</p>
-      {loading ? <p role="status">読み込み中です…</p> : !userId ? (
-        <p><Link href="/auth" style={{ color: '#ffda79' }}>ログイン</Link>すると称号を確認できます。</p>
-      ) : errorText ? <p role="alert" style={{ color: '#ff8d8d' }}>{errorText}</p> : (
+    <AppShell>
+      <Link href={userId ? `/user/${userId}` : '/'} className="ui-muted">← 戻る</Link>
+      <h1 style={{ color: 'var(--primary)' }}>称号</h1>
+      <p className="ui-muted">歩みから得た称号を一つだけ掲げられます。</p>
+      {loading ? <LoadingState /> : !userId ? (
+        <p><Link href="/auth" className="ui-link">ログイン</Link>すると称号を確認できます。</p>
+      ) : errorText ? <ErrorState>{errorText}</ErrorState> : (
         <div style={{ display: 'grid', gap: 12 }}>
           {titles.map((title) => (
-            <article key={title.id} className="panel-card" style={{ padding: 18, opacity: title.owned ? 1 : 0.55 }}>
+            <Surface key={title.id} style={{ padding: 18, opacity: title.owned ? 1 : 0.55 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
                 <div>
                   <h2 style={{ margin: 0, fontSize: 18 }}>{title.name}</h2>
                   <p style={{ color: '#bda991', marginBottom: 0 }}>{title.description}</p>
                 </div>
-                <button
+                <Button
                   type="button"
-                  className={title.equipped ? 'gold-button' : 'soft-button'}
+                  variant={title.equipped ? 'primary' : 'secondary'}
                   disabled={!title.owned || updating !== null}
                   onClick={() => equip(title.equipped ? null : title.id)}
                   style={{ padding: '8px 12px', cursor: title.owned ? 'pointer' : 'not-allowed', flexShrink: 0 }}
                 >
                   {title.equipped ? '装備中' : title.owned ? '装備する' : '未所持'}
-                </button>
+                </Button>
               </div>
-            </article>
+            </Surface>
           ))}
         </div>
       )}
-    </main>
+    </AppShell>
   )
 }

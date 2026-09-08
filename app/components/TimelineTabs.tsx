@@ -33,7 +33,7 @@ export default function TimelineTabs({
     <div
       style={{
         display: 'flex',
-        borderBottom: '1px solid #2a2a2a',
+        borderBottom: '1px solid var(--border)',
         marginBottom: '20px',
       }}
     >
@@ -67,7 +67,7 @@ export default function TimelineTabs({
                   left: '25%',
                   width: '50%',
                   height: '2px',
-                  backgroundColor: '#ffda79',
+                  backgroundColor: 'var(--primary)',
                   borderRadius: '2px',
                 }}
               />

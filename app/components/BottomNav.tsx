@@ -50,8 +50,8 @@ export default function BottomNav({
         bottom: 0,
         left: 0,
         width: '100%',
-        backgroundColor: '#1a1a1a',
-        borderTop: '1px solid #2a2a2a',
+        backgroundColor: 'var(--nav-background)',
+        borderTop: '1px solid var(--border)',
         display: 'flex',
         justifyContent: 'space-around',
         alignItems: 'center',
@@ -71,8 +71,8 @@ export default function BottomNav({
           ...navLinkStyle,
 
           color: isActive('/')
-            ? '#ffda79'
-            : '#aaa',
+            ? 'var(--primary)'
+            : 'var(--foreground-muted)',
 
           fontWeight: isActive('/')
             ? 'bold'
@@ -102,8 +102,8 @@ export default function BottomNav({
           color: isActive(
             '/find'
           )
-            ? '#ffda79'
-            : '#aaa',
+            ? 'var(--primary)'
+            : 'var(--foreground-muted)',
 
           fontWeight: isActive(
             '/find'
@@ -138,8 +138,8 @@ export default function BottomNav({
           isActive(
             '/utaawase'
           )
-            ? '#ffda79'
-            : '#aaa'
+            ? 'var(--primary)'
+            : 'var(--foreground-muted)'
         )}
       >
         <span
@@ -165,8 +165,8 @@ export default function BottomNav({
           color: isActive(
             '/ranking'
           )
-            ? '#ffda79'
-            : '#aaa',
+            ? 'var(--primary)'
+            : 'var(--foreground-muted)',
 
           fontWeight: isActive(
             '/ranking'
@@ -215,8 +215,8 @@ export default function BottomNav({
           pathname.startsWith(
             '/user/'
           )
-            ? '#ffda79'
-            : '#aaa'
+            ? 'var(--primary)'
+            : 'var(--foreground-muted)'
         )}
       >
         <span
@@ -284,7 +284,7 @@ const navButtonStyle = (
   fontSize: '0.75rem',
 
   fontWeight:
-    color === '#ffda79'
+    color === 'var(--primary)'
       ? 'bold'
       : 'normal',
 
