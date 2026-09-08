@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import { AppShell, Button, ErrorState, LoadingState, Surface } from '../components/ui'
+import { COSMETIC_FRAME_CHANGE_EVENT } from '../components/ThemeProvider'
 
 type Item = { id: string; name: string; description: string; css_key: string; price: number; owned?: boolean }
 
@@ -40,7 +41,10 @@ export default function CustomizePage() {
     const { error } = await supabase.rpc('equip_my_cosmetic', { p_kind: kind, p_item_id: itemId })
     if (error) { setErrorText(error.message); return }
     if (kind === 'theme') { setEquippedTheme(itemId || 'default'); document.documentElement.dataset.theme = itemId || 'default' }
-    else setEquippedFrame(itemId)
+    else {
+      setEquippedFrame(itemId)
+      window.dispatchEvent(new Event(COSMETIC_FRAME_CHANGE_EVENT))
+    }
   }
 
   const loading = authLoading || (!!userId && loadedUserId !== userId)

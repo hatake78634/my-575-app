@@ -5,9 +5,10 @@ import {
   useState,
 } from 'react'
 
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import Avatar from './Avatar'
+import { useEquippedAvatarFrame } from './ThemeProvider'
 
 type HeaderProps = {
   userId: string | null
@@ -21,6 +22,7 @@ export default function Header({
   userAvatar,
 }: HeaderProps) {
   const router = useRouter()
+  const equippedAvatarFrame = useEquippedAvatarFrame()
 
   const [unreadState, setUnreadState] =
     useState<{
@@ -242,26 +244,21 @@ export default function Header({
             </button>
 
             {userAvatar ? (
-              <Image
+              <Avatar
                 src={userAvatar}
-                alt={`${userName}のアイコン`}
-                width={38}
-                height={38}
+                name={userName}
+                size={38}
+                frame={equippedAvatarFrame}
                 onClick={() =>
                   router.push(
                     `/user/${userId}`
                   )
                 }
                 style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '50%',
-                  objectFit: 'cover',
                   cursor: 'pointer',
                   border:
                     '1px solid var(--border)',
                 }}
-                unoptimized
               />
             ) : (
               <button
