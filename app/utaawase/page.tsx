@@ -497,8 +497,8 @@ const handlePublicRoom =
       <div
         style={{
           minHeight: '100vh',
-          backgroundColor: '#121212',
-          color: '#777',
+          backgroundColor: 'var(--page-background)',
+          color: 'var(--foreground-muted)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -517,8 +517,8 @@ const handlePublicRoom =
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#121212',
-        color: '#fff',
+        backgroundColor: 'var(--page-background)',
+        color: 'var(--foreground)',
         paddingBottom: '100px',
       }}
     >
@@ -553,7 +553,7 @@ const handlePublicRoom =
           <p
             style={{
               margin: 0,
-              color: '#888',
+              color: 'var(--foreground-muted)',
               fontSize: '0.82rem',
               lineHeight: '1.8',
             }}
@@ -570,8 +570,8 @@ const handlePublicRoom =
 
         <section
           style={{
-            backgroundColor: '#1c1c1c',
-            border: '1px solid #303030',
+            backgroundColor: 'var(--surface)',
+            border: '1px solid var(--border)',
             borderRadius: '16px',
             padding: '18px',
             marginBottom: '15px',
@@ -599,7 +599,7 @@ const handlePublicRoom =
 
               <div
                 style={{
-                  color: '#888',
+                  color: 'var(--foreground-muted)',
                   fontSize: '0.78rem',
                   lineHeight: '1.7',
                 }}
@@ -612,7 +612,7 @@ const handlePublicRoom =
 
             <div
               style={{
-                color: '#777',
+                color: 'var(--foreground-muted)',
                 fontSize: '0.7rem',
                 textAlign: 'right',
               }}
@@ -633,13 +633,13 @@ const handlePublicRoom =
             style={{
               backgroundColor:
                 isCompetitive
-                  ? '#29251c'
-                  : '#161616',
+                  ? 'var(--surface-elevated)'
+                  : 'var(--surface-subtle)',
 
               border:
                 isCompetitive
-                  ? '1px solid #5c4d27'
-                  : '1px solid #2d2d2d',
+                  ? '1px solid var(--border)'
+                  : '1px solid var(--border)',
 
               borderRadius: '12px',
 
@@ -669,7 +669,7 @@ const handlePublicRoom =
 
                 padding: 0,
 
-                color: '#fff',
+                color: 'var(--foreground)',
 
                 display: 'flex',
 
@@ -694,8 +694,8 @@ const handlePublicRoom =
 
                     color:
                       isCompetitive
-                        ? '#ffda79'
-                        : '#ddd',
+                        ? 'var(--primary)'
+                        : 'var(--foreground)',
 
                     fontSize:
                       '0.88rem',
@@ -706,7 +706,7 @@ const handlePublicRoom =
 
                 <div
                   style={{
-                    color: '#888',
+                    color: 'var(--foreground-muted)',
                     fontSize: '0.72rem',
                     marginTop: '4px',
                   }}
@@ -735,8 +735,8 @@ const handlePublicRoom =
 
                   backgroundColor:
                     isCompetitive
-                      ? '#ffda79'
-                      : '#444',
+                      ? 'var(--primary)'
+                      : 'var(--surface-elevated)',
 
                   transition: '0.2s',
 
@@ -764,8 +764,8 @@ const handlePublicRoom =
 
                     backgroundColor:
                       isCompetitive
-                        ? '#121212'
-                        : '#aaa',
+                        ? 'var(--primary-foreground)'
+                        : 'var(--foreground-muted)',
 
                     transition:
                       '0.2s',
@@ -782,9 +782,9 @@ const handlePublicRoom =
                   paddingTop: '10px',
 
                   borderTop:
-                    '1px solid #463c27',
+                    '1px solid var(--border)',
 
-                  color: '#b9ae90',
+                  color: 'var(--foreground-muted)',
 
                   fontSize: '0.73rem',
 
@@ -803,7 +803,7 @@ const handlePublicRoom =
               <div
                 style={{
                   marginTop: '9px',
-                  color: '#777',
+                  color: 'var(--foreground-muted)',
                   fontSize: '0.72rem',
                 }}
               >
@@ -834,9 +834,9 @@ const handlePublicRoom =
               border: 'none',
 
               backgroundColor:
-                '#ffda79',
+                'var(--primary)',
 
-              color: '#121212',
+              color: 'var(--primary-foreground)',
 
               fontWeight: 'bold',
 
@@ -866,8 +866,8 @@ const handlePublicRoom =
 
         <section
           style={{
-            backgroundColor: '#1c1c1c',
-            border: '1px solid #303030',
+            backgroundColor: 'var(--surface)',
+            border: '1px solid var(--border)',
             borderRadius: '16px',
             padding: '18px',
             marginBottom: '15px',
@@ -885,7 +885,7 @@ const handlePublicRoom =
 
           <div
             style={{
-              color: '#888',
+              color: 'var(--foreground-muted)',
               fontSize: '0.78rem',
               lineHeight: '1.7',
               marginBottom: '14px',
@@ -918,8 +918,8 @@ const handlePublicRoom =
 
         <section
           style={{
-            backgroundColor: '#1c1c1c',
-            border: '1px solid #303030',
+            backgroundColor: 'var(--surface)',
+            border: '1px solid var(--border)',
             borderRadius: '16px',
             padding: '18px',
           }}
@@ -936,7 +936,7 @@ const handlePublicRoom =
 
           <div
             style={{
-              color: '#888',
+              color: 'var(--foreground-muted)',
               fontSize: '0.78rem',
               lineHeight: '1.7',
               marginBottom: '14px',
@@ -973,9 +973,9 @@ const handlePublicRoom =
             padding: '14px',
 
             borderTop:
-              '1px solid #292929',
+              '1px solid var(--border)',
 
-            color: '#777',
+            color: 'var(--foreground-muted)',
 
             fontSize: '0.72rem',
 
@@ -1010,12 +1010,12 @@ const secondaryButton = {
 
   borderRadius: '10px',
 
-  border: '1px solid #444',
+  border: '1px solid var(--border)',
 
   backgroundColor:
-    '#262626',
+    'var(--input-background)',
 
-  color: '#ddd',
+  color: 'var(--foreground)',
 
   fontWeight: 'bold',
 

@@ -446,8 +446,8 @@ export default function UtaawaseWaitingPage() {
       <div
         style={{
           minHeight: '100vh',
-          backgroundColor: '#121212',
-          color: '#777',
+          backgroundColor: 'var(--page-background)',
+          color: 'var(--foreground-muted)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -466,8 +466,8 @@ export default function UtaawaseWaitingPage() {
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#121212',
-        color: '#fff',
+        backgroundColor: 'var(--page-background)',
+        color: 'var(--foreground)',
         paddingBottom: '100px',
       }}
     >
@@ -505,13 +505,13 @@ export default function UtaawaseWaitingPage() {
 
         <section
           style={{
-            backgroundColor: '#1c1c1c',
-            border: '1px solid #303030',
+            backgroundColor: 'var(--surface)',
+            border: '1px solid var(--border)',
             borderRadius: '18px',
             padding: '28px 20px',
             textAlign: 'center',
             boxShadow:
-              '0 6px 20px rgba(0,0,0,0.25)',
+              '0 6px 20px var(--shadow)',
           }}
         >
           <div
@@ -546,7 +546,7 @@ export default function UtaawaseWaitingPage() {
           >
             <div
               style={{
-                color: '#888',
+                color: 'var(--foreground-muted)',
                 fontSize: '0.75rem',
                 marginBottom: '7px',
               }}
@@ -562,15 +562,15 @@ export default function UtaawaseWaitingPage() {
                 color:
                   waitingCount >=
                   MIN_PLAYERS
-                    ? '#ffda79'
-                    : '#fff',
+                    ? 'var(--primary)'
+                    : 'var(--foreground)',
               }}
             >
               {waitingCount}
 
               <span
                 style={{
-                  color: '#777',
+                  color: 'var(--foreground-muted)',
                   fontSize: '1rem',
                   marginLeft: '4px',
                 }}
@@ -610,8 +610,8 @@ export default function UtaawaseWaitingPage() {
 
                         backgroundColor:
                           active
-                            ? '#ffda79'
-                            : '#333',
+                            ? 'var(--primary)'
+                            : 'var(--surface-elevated)',
 
                         transition:
                           '0.2s',
@@ -630,10 +630,10 @@ export default function UtaawaseWaitingPage() {
           <div
             style={{
               borderTop:
-                '1px solid #2b2b2b',
+                '1px solid var(--border)',
 
               borderBottom:
-                '1px solid #2b2b2b',
+                '1px solid var(--border)',
 
               padding: '18px 0',
               marginBottom: '20px',
@@ -643,7 +643,7 @@ export default function UtaawaseWaitingPage() {
               <>
                 <div
                   style={{
-                    color: '#777',
+                    color: 'var(--foreground-muted)',
                     fontSize:
                       '0.72rem',
                     marginBottom:
@@ -673,7 +673,7 @@ export default function UtaawaseWaitingPage() {
                 <div
                   style={{
                     color:
-                      '#ffda79',
+                      'var(--primary)',
 
                     fontWeight:
                       'bold',
@@ -687,7 +687,7 @@ export default function UtaawaseWaitingPage() {
 
                 <div
                   style={{
-                    color: '#888',
+                    color: 'var(--foreground-muted)',
                     fontSize:
                       '0.75rem',
                   }}
@@ -705,7 +705,7 @@ export default function UtaawaseWaitingPage() {
 
           <div
             style={{
-              color: '#888',
+              color: 'var(--foreground-muted)',
               fontSize: '0.76rem',
               lineHeight: '1.9',
               marginBottom: '24px',
@@ -729,7 +729,7 @@ export default function UtaawaseWaitingPage() {
           {errorText && (
             <div
               style={{
-                color: '#ff8f8f',
+                color: 'var(--danger)',
                 fontSize: '0.75rem',
                 marginBottom:
                   '15px',
@@ -754,10 +754,10 @@ export default function UtaawaseWaitingPage() {
               backgroundColor:
                 'transparent',
 
-              color: '#aaa',
+              color: 'var(--foreground-muted)',
 
               border:
-                '1px solid #444',
+                '1px solid var(--border)',
 
               borderRadius: '10px',
 
@@ -788,14 +788,14 @@ export default function UtaawaseWaitingPage() {
           style={{
             marginTop: '22px',
             padding: '15px',
-            color: '#777',
+            color: 'var(--foreground-muted)',
             fontSize: '0.73rem',
             lineHeight: '1.9',
           }}
         >
           <strong
             style={{
-              color: '#aaa',
+              color: 'var(--foreground-muted)',
             }}
           >
             歌合の流れ
