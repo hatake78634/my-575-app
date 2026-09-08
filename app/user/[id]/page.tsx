@@ -986,10 +986,10 @@ export default function UserPage() {
             '100vh',
 
           backgroundColor:
-            '#121212',
+            'var(--page-background)',
 
           color:
-            '#777',
+            'var(--foreground-muted)',
 
           display:
             'flex',
@@ -1027,10 +1027,10 @@ export default function UserPage() {
     <div
       style={{
         backgroundColor:
-          '#121212',
+          'var(--page-background)',
 
         color:
-          '#fff',
+          'var(--foreground)',
 
         minHeight:
           '100vh',
@@ -1072,7 +1072,7 @@ export default function UserPage() {
               'none',
 
             color:
-              '#888',
+              'var(--foreground-muted)',
 
             cursor:
               'pointer',
@@ -1156,7 +1156,7 @@ export default function UserPage() {
                       'cover',
 
                     border:
-                      '2px solid #333',
+                      '2px solid var(--border)',
                   }}
 
                   unoptimized
@@ -1174,7 +1174,7 @@ export default function UserPage() {
                       '50%',
 
                     backgroundColor:
-                      '#444',
+                      'var(--surface-elevated)',
                   }}
                 />
               )}
@@ -1210,10 +1210,10 @@ export default function UserPage() {
 
                   style={{
                     backgroundColor:
-                      '#211f19',
+                      'var(--surface-elevated)',
 
                     border:
-                      '1px solid #554923',
+                      '1px solid var(--border)',
 
                     borderRadius:
                       '20px',
@@ -1222,7 +1222,7 @@ export default function UserPage() {
                       '5px 9px',
 
                     color:
-                      '#ffda79',
+                      'var(--primary)',
 
                     fontSize:
                       '0.75rem',
@@ -1253,7 +1253,7 @@ export default function UserPage() {
                       '0.72rem',
 
                     color:
-                      '#777',
+                      'var(--foreground-muted)',
                   }}
                 >
                   ID:{' '}
@@ -1298,16 +1298,16 @@ export default function UserPage() {
                   backgroundColor:
                     isFollowing
                       ? 'transparent'
-                      : '#ffda79',
+                      : 'var(--primary)',
 
                   color:
                     isFollowing
-                      ? '#fff'
-                      : '#121212',
+                      ? 'var(--foreground)'
+                      : 'var(--page-background)',
 
                   border:
                     isFollowing
-                      ? '1px solid #444'
+                      ? '1px solid var(--border)'
                       : 'none',
                 }}
               >
@@ -1325,7 +1325,7 @@ export default function UserPage() {
           <p
             style={{
               color:
-                '#ccc',
+                'var(--foreground)',
 
               fontSize:
                 '0.9rem',
@@ -1363,10 +1363,10 @@ export default function UserPage() {
                 '5px',
 
               borderTop:
-                '1px solid #2a2a2a',
+                '1px solid var(--border)',
 
               borderBottom:
-                '1px solid #2a2a2a',
+                '1px solid var(--border)',
 
               padding:
                 '16px 0',
@@ -1413,7 +1413,7 @@ export default function UserPage() {
         <div
           style={{
             borderBottom:
-              '1px solid #2a2a2a',
+              '1px solid var(--border)',
 
             marginBottom:
               '20px',
@@ -1428,7 +1428,7 @@ export default function UserPage() {
                 '0 3px 10px',
 
               borderBottom:
-                '2px solid #ffda79',
+                '2px solid var(--primary)',
 
               fontSize:
                 '0.95rem',
@@ -1453,7 +1453,7 @@ export default function UserPage() {
                 'center',
 
               color:
-                '#777',
+                'var(--foreground-muted)',
 
               padding:
                 '50px 20px',
@@ -1551,7 +1551,7 @@ function StatItem({
             '1rem',
 
           color:
-            '#fff',
+            'var(--foreground)',
         }}
       >
         {number}
@@ -1560,7 +1560,7 @@ function StatItem({
       <div
         style={{
           color:
-            '#888',
+            'var(--foreground-muted)',
 
           fontSize:
             '0.72rem',
@@ -1584,10 +1584,10 @@ const secondaryButton = {
     'transparent',
 
   border:
-    '1px solid #444',
+    '1px solid var(--border)',
 
   color:
-    '#fff',
+    'var(--foreground)',
 
   padding:
     '7px 14px',

@@ -614,7 +614,7 @@ export default function PublicUtaawasePage() {
               <div
                 style={{
                   color:
-                    '#a99e7f',
+                    'var(--foreground-muted)',
 
                   fontSize:
                     '0.75rem',
@@ -650,7 +650,7 @@ export default function PublicUtaawasePage() {
               <div
                 style={{
                   color:
-                    '#777',
+                    'var(--foreground-muted)',
 
                   fontSize:
                     '0.68rem',
@@ -662,7 +662,7 @@ export default function PublicUtaawasePage() {
               <div
                 style={{
                   color:
-                    '#ffda79',
+                    'var(--primary)',
 
                   fontWeight:
                     'bold',
@@ -710,7 +710,7 @@ export default function PublicUtaawasePage() {
           <div
             style={{
               color:
-                '#999',
+                'var(--foreground-muted)',
 
               fontSize:
                 '0.78rem',
@@ -778,7 +778,7 @@ export default function PublicUtaawasePage() {
             <span
               style={{
                 color:
-                  '#d8b95f',
+                  'var(--primary)',
                 marginLeft:
                   '5px',
                 fontSize:
@@ -824,7 +824,7 @@ export default function PublicUtaawasePage() {
             <span
               style={{
                 color:
-                  '#777',
+                  'var(--foreground-muted)',
                 marginLeft:
                   '5px',
                 fontSize:
@@ -917,7 +917,7 @@ export default function PublicUtaawasePage() {
             <div
               style={{
                 color:
-                  '#777',
+                  'var(--foreground-muted)',
 
                 textAlign:
                   'center',
@@ -936,7 +936,7 @@ export default function PublicUtaawasePage() {
           <div
             style={{
               color:
-                '#666',
+                'var(--foreground-muted)',
               textAlign:
                 'center',
               fontSize:
@@ -992,7 +992,7 @@ export default function PublicUtaawasePage() {
             <div
               style={{
                 color:
-                  '#666',
+                  'var(--foreground-muted)',
 
                 fontSize:
                   '0.68rem',
@@ -1071,7 +1071,7 @@ export default function PublicUtaawasePage() {
             <div
               style={{
                 color:
-                  '#777',
+                  'var(--foreground-muted)',
 
                 fontSize:
                   '0.75rem',
@@ -1157,7 +1157,7 @@ export default function PublicUtaawasePage() {
                         <div
                           style={{
                             color:
-                              '#777',
+                              'var(--foreground-muted)',
 
                             fontSize:
                               '0.68rem',
@@ -1189,10 +1189,10 @@ export default function PublicUtaawasePage() {
                                 '999px',
 
                               backgroundColor:
-                                '#302a18',
+                                'var(--surface-elevated)',
 
                               color:
-                                '#ffda79',
+                                'var(--primary)',
 
                               fontSize:
                                 '0.62rem',
@@ -1217,8 +1217,8 @@ export default function PublicUtaawasePage() {
                             color:
                               room.current_players >=
                               3
-                                ? '#9ed89e'
-                                : '#aaa',
+                                ? 'var(--success)'
+                                : 'var(--foreground-muted)',
 
                             fontWeight:
                               'bold',
@@ -1240,7 +1240,7 @@ export default function PublicUtaawasePage() {
                         <div
                           style={{
                             color:
-                              '#666',
+                              'var(--foreground-muted)',
 
                             fontSize:
                               '0.65rem',
@@ -1269,7 +1269,7 @@ export default function PublicUtaawasePage() {
                           '5px',
 
                         backgroundColor:
-                          '#2a2a2a',
+                          'var(--surface-elevated)',
 
                         borderRadius:
                           '999px',
@@ -1296,7 +1296,7 @@ export default function PublicUtaawasePage() {
                             }%`,
 
                           backgroundColor:
-                            '#ffda79',
+                            'var(--primary)',
 
                           transition:
                             'width 0.25s ease',
@@ -1356,7 +1356,7 @@ export default function PublicUtaawasePage() {
                         <div
                           style={{
                             color:
-                              '#666',
+                              'var(--foreground-muted)',
 
                             textAlign:
                               'center',
@@ -1429,7 +1429,7 @@ export default function PublicUtaawasePage() {
         <div
           style={{
             color:
-              '#555',
+              'var(--foreground-muted)',
 
             fontSize:
               '0.68rem',
@@ -1505,10 +1505,10 @@ function FullScreenMessage({
           '100vh',
 
         backgroundColor:
-          '#121212',
+          'var(--page-background)',
 
         color:
-          '#888',
+          'var(--foreground-muted)',
 
         display:
           'flex',
@@ -1541,10 +1541,10 @@ const pageStyle = {
     '100vh',
 
   backgroundColor:
-    '#121212',
+    'var(--page-background)',
 
   color:
-    '#fff',
+    'var(--foreground)',
 
   paddingBottom:
     '80px',
@@ -1569,10 +1569,10 @@ const mainStyle = {
 
 const cardStyle = {
   backgroundColor:
-    '#1c1c1c',
+    'var(--surface)',
 
   border:
-    '1px solid #303030',
+    '1px solid var(--border)',
 
   borderRadius:
     '16px',
@@ -1598,10 +1598,10 @@ const primaryButtonStyle = {
     '11px',
 
   backgroundColor:
-    '#ffda79',
+    'var(--primary)',
 
   color:
-    '#121212',
+    'var(--page-background)',
 
   fontWeight:
     'bold',
@@ -1624,13 +1624,13 @@ const secondaryButtonStyle = {
     '10px',
 
   border:
-    '1px solid #494949',
+    '1px solid var(--border)',
 
   backgroundColor:
-    '#242424',
+    'var(--surface-elevated)',
 
   color:
-    '#eee',
+    'var(--foreground)',
 
   fontWeight:
     'bold',
@@ -1647,7 +1647,7 @@ const backButtonStyle = {
     'none',
 
   color:
-    '#888',
+    'var(--foreground-muted)',
 
   padding: 0,
 
@@ -1660,16 +1660,16 @@ const backButtonStyle = {
 
 const refreshButtonStyle = {
   border:
-    '1px solid #333',
+    '1px solid var(--border)',
 
   borderRadius:
     '8px',
 
   backgroundColor:
-    '#1b1b1b',
+    'var(--surface)',
 
   color:
-    '#aaa',
+    'var(--foreground-muted)',
 
   padding:
     '7px 10px',
@@ -1687,7 +1687,7 @@ const labelStyle = {
     'block',
 
   color:
-    '#aaa',
+    'var(--foreground-muted)',
 
   fontSize:
     '0.75rem',
@@ -1707,16 +1707,16 @@ const inputStyle = {
     '12px 13px',
 
   border:
-    '1px solid #3a3a3a',
+    '1px solid var(--border)',
 
   borderRadius:
     '10px',
 
   backgroundColor:
-    '#151515',
+    'var(--surface)',
 
   color:
-    '#fff',
+    'var(--foreground)',
 
   fontSize:
     '0.86rem',
@@ -1730,7 +1730,7 @@ const inputStyle = {
 
 const countStyle = {
   color:
-    '#555',
+    'var(--foreground-muted)',
 
   textAlign:
     'right' as const,
@@ -1744,13 +1744,13 @@ const countStyle = {
 
 const errorStyle = {
   backgroundColor:
-    '#2c1818',
+    'color-mix(in srgb, var(--danger) 16%, var(--surface))',
 
   border:
-    '1px solid #633',
+    '1px solid color-mix(in srgb, var(--danger) 55%, var(--border))',
 
   color:
-    '#ffaaaa',
+    'var(--danger)',
 
   padding:
     '12px',

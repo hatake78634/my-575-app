@@ -1016,8 +1016,8 @@ function FindPageContent() {
       style={{
         minHeight: '100vh',
         backgroundColor:
-          '#121212',
-        color: '#fff',
+          'var(--page-background)',
+        color: 'var(--foreground)',
         paddingBottom:
           '100px',
       }}
@@ -1060,7 +1060,7 @@ function FindPageContent() {
             style={{
               background: 'none',
               border: 'none',
-              color: '#888',
+              color: 'var(--foreground-muted)',
               cursor: 'pointer',
             }}
           >
@@ -1078,9 +1078,9 @@ function FindPageContent() {
             alignItems:
               'center',
             backgroundColor:
-              '#1e1e1e',
+              'var(--surface)',
             border:
-              '1px solid #333',
+              '1px solid var(--border)',
             borderRadius:
               '14px',
             padding:
@@ -1093,7 +1093,7 @@ function FindPageContent() {
             style={{
               marginRight:
                 '8px',
-              color: '#888',
+              color: 'var(--foreground-muted)',
             }}
           >
             🔎
@@ -1128,7 +1128,7 @@ function FindPageContent() {
                 'none',
               border: 'none',
               outline: 'none',
-              color: '#fff',
+              color: 'var(--foreground)',
               padding:
                 '13px 0',
               fontSize:
@@ -1146,7 +1146,7 @@ function FindPageContent() {
                 background:
                   'none',
                 border: 'none',
-                color: '#777',
+                color: 'var(--foreground-muted)',
                 cursor:
                   'pointer',
                 fontSize:
@@ -1166,7 +1166,7 @@ function FindPageContent() {
           style={{
             display: 'flex',
             borderBottom:
-              '1px solid #2a2a2a',
+              '1px solid var(--border)',
             marginBottom:
               '25px',
           }}
@@ -1231,7 +1231,7 @@ function FindPageContent() {
             style={{
               textAlign:
                 'center',
-              color: '#777',
+              color: 'var(--foreground-muted)',
               padding:
                 '30px',
             }}
@@ -1332,7 +1332,7 @@ function FindPageContent() {
                     border:
                       'none',
                     color:
-                      '#888',
+                      'var(--foreground-muted)',
                     cursor:
                       'pointer',
                     padding: 0,
@@ -1358,7 +1358,7 @@ function FindPageContent() {
                 <div
                   style={{
                     color:
-                      '#888',
+                      'var(--foreground-muted)',
                     marginTop:
                       '6px',
                     fontSize:
@@ -1378,7 +1378,7 @@ function FindPageContent() {
                     textAlign:
                       'center',
                     color:
-                      '#777',
+                      'var(--foreground-muted)',
                   }}
                 >
                   読み込み中...
@@ -1535,16 +1535,16 @@ function UserResults({
               gap: '12px',
               width: '100%',
               backgroundColor:
-                '#1e1e1e',
+                'var(--surface)',
               border:
-                '1px solid #2a2a2a',
+                '1px solid var(--border)',
               borderRadius:
                 '14px',
               padding:
                 '14px',
               cursor:
                 'pointer',
-              color: '#fff',
+              color: 'var(--foreground)',
               textAlign:
                 'left',
             }}
@@ -1579,7 +1579,7 @@ function UserResults({
                   borderRadius:
                     '50%',
                   backgroundColor:
-                    '#444',
+                    'var(--surface-elevated)',
                   flexShrink: 0,
                 }}
               />
@@ -1600,7 +1600,7 @@ function UserResults({
                 <div
                   style={{
                     color:
-                      '#888',
+                      'var(--foreground-muted)',
                     fontSize:
                       '0.78rem',
                     marginTop:
@@ -1676,14 +1676,14 @@ function TagResults({
               alignItems:
                 'center',
               backgroundColor:
-                '#1e1e1e',
+                'var(--surface)',
               border:
-                '1px solid #2a2a2a',
+                '1px solid var(--border)',
               borderRadius:
                 '12px',
               padding:
                 '14px 16px',
-              color: '#fff',
+              color: 'var(--foreground)',
               cursor:
                 'pointer',
               textAlign:
@@ -1693,7 +1693,7 @@ function TagResults({
             <span
               style={{
                 color:
-                  '#ffda79',
+                  'var(--primary)',
                 fontWeight:
                   'bold',
               }}
@@ -1704,7 +1704,7 @@ function TagResults({
             <span
               style={{
                 color:
-                  '#777',
+                  'var(--foreground-muted)',
                 fontSize:
                   '0.8rem',
               }}
@@ -1733,7 +1733,7 @@ function EmptySearch({
         textAlign: 'center',
         padding:
           '60px 20px',
-        color: '#777',
+        color: 'var(--foreground-muted)',
       }}
     >
       <div
@@ -1782,7 +1782,7 @@ function EmptyResult({
       style={{
         textAlign:
           'center',
-        color: '#777',
+        color: 'var(--foreground-muted)',
         padding:
           '50px 20px',
       }}
@@ -1819,8 +1819,8 @@ function TabButton({
           'none',
         border: 'none',
         color: active
-          ? '#fff'
-          : '#777',
+          ? 'var(--foreground)'
+          : 'var(--foreground-muted)',
         padding: '12px',
         cursor:
           'pointer',
@@ -1844,7 +1844,7 @@ function TabButton({
             width: '50%',
             height: '2px',
             backgroundColor:
-              '#ffda79',
+              'var(--primary)',
             borderRadius:
               '2px',
           }}

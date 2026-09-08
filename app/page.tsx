@@ -2366,7 +2366,7 @@ export default function Home() {
                 'center',
 
               color:
-                '#777',
+                'var(--foreground-muted)',
 
               marginTop:
                 '40px',
@@ -2399,7 +2399,7 @@ export default function Home() {
                   '60px 20px',
 
                 color:
-                  '#888',
+                  'var(--foreground-muted)',
               }}
             >
               まだ見つけられる句がありません。
@@ -2431,7 +2431,7 @@ export default function Home() {
                   'center',
 
                 color:
-                  '#777',
+                  'var(--foreground-muted)',
 
                 marginTop:
                   '40px',
@@ -2482,7 +2482,7 @@ export default function Home() {
               <div
                 style={{
                   color:
-                    '#eee',
+                    'var(--foreground)',
 
                   fontWeight:
                     'bold',
@@ -2505,10 +2505,10 @@ export default function Home() {
 
                 style={{
                   backgroundColor:
-                    '#ffda79',
+                    'var(--primary)',
 
                   color:
-                    '#121212',
+                    'var(--page-background)',
 
                   border:
                     'none',
@@ -2546,7 +2546,7 @@ export default function Home() {
                   '60px 20px',
 
                 color:
-                  '#888',
+                  'var(--foreground-muted)',
               }}
             >
               贔屓の歌人の句は
@@ -2576,7 +2576,7 @@ export default function Home() {
                 'center',
 
               color:
-                '#777',
+                'var(--foreground-muted)',
 
               marginTop:
                 '40px',
@@ -2600,10 +2600,10 @@ export default function Home() {
     <div
       style={{
         backgroundColor:
-          '#121212',
+          'var(--page-background)',
 
         color:
-          '#fff',
+          'var(--foreground)',
 
         minHeight:
           '100vh',
@@ -2679,10 +2679,10 @@ export default function Home() {
               '50%',
 
             backgroundColor:
-              '#ffda79',
+              'var(--primary)',
 
             color:
-              '#121212',
+              'var(--page-background)',
 
             fontSize:
               '2rem',
@@ -2691,7 +2691,7 @@ export default function Home() {
               'none',
 
             boxShadow:
-              '0 4px 15px rgba(255, 218, 121, 0.4)',
+              '0 4px 15px color-mix(in srgb, var(--primary) 40%, transparent)',
 
             cursor:
               'pointer',

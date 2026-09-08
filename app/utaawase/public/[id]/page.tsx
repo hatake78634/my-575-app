@@ -470,7 +470,7 @@ export default function PublicUtaawaseLobbyPage() {
             <div
               style={{
                 color:
-                  '#ffaaaa',
+                  'var(--danger)',
 
                 lineHeight:
                   '1.8',
@@ -556,7 +556,7 @@ export default function PublicUtaawaseLobbyPage() {
           <div
             style={{
               color:
-                '#a99e7f',
+                'var(--foreground-muted)',
 
               fontSize:
                 '0.72rem',
@@ -591,7 +591,7 @@ export default function PublicUtaawaseLobbyPage() {
           <div
             style={{
               color:
-                '#777',
+                'var(--foreground-muted)',
 
               fontSize:
                 '0.72rem',
@@ -626,7 +626,7 @@ export default function PublicUtaawaseLobbyPage() {
           <div
             style={{
               color:
-                '#777',
+                'var(--foreground-muted)',
 
               fontSize:
                 '0.7rem',
@@ -649,8 +649,8 @@ export default function PublicUtaawaseLobbyPage() {
               color:
                 lobby.current_players >=
                 3
-                  ? '#9ed89e'
-                  : '#fff',
+                  ? 'var(--success)'
+                  : 'var(--foreground)',
             }}
           >
             {
@@ -659,7 +659,7 @@ export default function PublicUtaawaseLobbyPage() {
             <span
               style={{
                 color:
-                  '#666',
+                  'var(--foreground-muted)',
 
                 fontSize:
                   '1rem',
@@ -682,7 +682,7 @@ export default function PublicUtaawaseLobbyPage() {
                   '4px',
 
                 color:
-                  '#777',
+                  'var(--foreground-muted)',
               }}
             >
               人
@@ -698,7 +698,7 @@ export default function PublicUtaawaseLobbyPage() {
                 '6px',
 
               backgroundColor:
-                '#292929',
+                'var(--surface-elevated)',
 
               borderRadius:
                 '999px',
@@ -725,7 +725,7 @@ export default function PublicUtaawaseLobbyPage() {
                   }%`,
 
                 backgroundColor:
-                  '#ffda79',
+                  'var(--primary)',
 
                 transition:
                   'width 0.25s ease',
@@ -739,8 +739,8 @@ export default function PublicUtaawaseLobbyPage() {
               color:
                 lobby.current_players >=
                 3
-                  ? '#9ed89e'
-                  : '#999',
+                  ? 'var(--success)'
+                  : 'var(--foreground-muted)',
 
               fontSize:
                 '0.76rem',
@@ -784,7 +784,7 @@ export default function PublicUtaawaseLobbyPage() {
           <div
             style={{
               color:
-                '#888',
+                'var(--foreground-muted)',
 
               fontSize:
                 '0.72rem',
@@ -839,12 +839,12 @@ export default function PublicUtaawaseLobbyPage() {
                         '10px',
 
                       backgroundColor:
-                        '#171717',
+                        'var(--surface)',
 
                       border:
                         memberIsHost
-                          ? '1px solid #4a4020'
-                          : '1px solid #292929',
+                          ? '1px solid var(--border)'
+                          : '1px solid var(--border)',
                     }}
                   >
                     {/* アイコン */}
@@ -864,7 +864,7 @@ export default function PublicUtaawaseLobbyPage() {
                           'hidden',
 
                         backgroundColor:
-                          '#292929',
+                          'var(--surface-elevated)',
 
                         display:
                           'flex',
@@ -908,7 +908,7 @@ export default function PublicUtaawaseLobbyPage() {
                         <span
                           style={{
                             color:
-                              '#777',
+                              'var(--foreground-muted)',
                           }}
                         >
                           👤
@@ -942,7 +942,7 @@ export default function PublicUtaawaseLobbyPage() {
                         <div
                           style={{
                             color:
-                              '#ffda79',
+                              'var(--primary)',
 
                             fontSize:
                               '0.62rem',
@@ -988,10 +988,10 @@ export default function PublicUtaawaseLobbyPage() {
                       '10px',
 
                     border:
-                      '1px dashed #292929',
+                      '1px dashed var(--border)',
 
                     color:
-                      '#555',
+                      'var(--foreground-muted)',
 
                     fontSize:
                       '0.72rem',
@@ -1021,7 +1021,7 @@ export default function PublicUtaawaseLobbyPage() {
             <div
               style={{
                 color:
-                  '#ffda79',
+                  'var(--primary)',
 
                 fontWeight:
                   'bold',
@@ -1039,7 +1039,7 @@ export default function PublicUtaawaseLobbyPage() {
             <div
               style={{
                 color:
-                  '#888',
+                  'var(--foreground-muted)',
 
                 fontSize:
                   '0.72rem',
@@ -1170,7 +1170,7 @@ export default function PublicUtaawaseLobbyPage() {
             <div
               style={{
                 color:
-                  '#777',
+                  'var(--foreground-muted)',
 
                 fontSize:
                   '0.72rem',
@@ -1225,7 +1225,7 @@ export default function PublicUtaawaseLobbyPage() {
               'center',
 
             color:
-              '#555',
+              'var(--foreground-muted)',
 
             fontSize:
               '0.65rem',
@@ -1290,10 +1290,10 @@ function FullScreenMessage({
           '100vh',
 
         backgroundColor:
-          '#121212',
+          'var(--page-background)',
 
         color:
-          '#888',
+          'var(--foreground-muted)',
 
         display:
           'flex',
@@ -1326,10 +1326,10 @@ const pageStyle = {
     '100vh',
 
   backgroundColor:
-    '#121212',
+    'var(--page-background)',
 
   color:
-    '#fff',
+    'var(--foreground)',
 
   paddingBottom:
     '70px',
@@ -1354,10 +1354,10 @@ const mainStyle = {
 
 const cardStyle = {
   backgroundColor:
-    '#1c1c1c',
+    'var(--surface)',
 
   border:
-    '1px solid #303030',
+    '1px solid var(--border)',
 
   borderRadius:
     '15px',
@@ -1380,10 +1380,10 @@ const primaryButtonStyle = {
     '14px',
 
   backgroundColor:
-    '#ffda79',
+    'var(--primary)',
 
   color:
-    '#111',
+    'var(--primary-foreground)',
 
   fontWeight:
     'bold',
@@ -1400,7 +1400,7 @@ const secondaryButtonStyle = {
     '100%',
 
   border:
-    '1px solid #444',
+    '1px solid var(--border)',
 
   borderRadius:
     '10px',
@@ -1409,10 +1409,10 @@ const secondaryButtonStyle = {
     '12px',
 
   backgroundColor:
-    '#252525',
+    'var(--surface-elevated)',
 
   color:
-    '#eee',
+    'var(--foreground)',
 
   fontWeight:
     'bold',
@@ -1426,7 +1426,7 @@ const dangerButtonStyle = {
     '100%',
 
   border:
-    '1px solid #633',
+    '1px solid color-mix(in srgb, var(--danger) 55%, var(--border))',
 
   borderRadius:
     '10px',
@@ -1435,10 +1435,10 @@ const dangerButtonStyle = {
     '12px',
 
   backgroundColor:
-    '#2c1818',
+    'color-mix(in srgb, var(--danger) 16%, var(--surface))',
 
   color:
-    '#ffaaaa',
+    'var(--danger)',
 
   fontWeight:
     'bold',
@@ -1452,13 +1452,13 @@ const dangerButtonStyle = {
 
 const errorStyle = {
   backgroundColor:
-    '#2c1818',
+    'color-mix(in srgb, var(--danger) 16%, var(--surface))',
 
   border:
-    '1px solid #633',
+    '1px solid color-mix(in srgb, var(--danger) 55%, var(--border))',
 
   color:
-    '#ffaaaa',
+    'var(--danger)',
 
   padding:
     '12px',

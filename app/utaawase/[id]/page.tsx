@@ -1482,7 +1482,7 @@ export default function UtaawaseRoomPage() {
 
             <div
               style={{
-                color: '#888',
+                color: 'var(--foreground-muted)',
                 fontSize: '0.82rem',
                 lineHeight: '1.8',
               }}
@@ -1591,7 +1591,7 @@ export default function UtaawaseRoomPage() {
                   'center',
 
                 color:
-                  '#888',
+                  'var(--foreground-muted)',
               }}
             >
               評価を集計しています...
@@ -1608,7 +1608,7 @@ export default function UtaawaseRoomPage() {
               <div
                 style={{
                   color:
-                    '#ff8f8f',
+                    'var(--danger)',
 
                   marginBottom:
                     '15px',
@@ -1698,16 +1698,16 @@ export default function UtaawaseRoomPage() {
                           border:
                             rank ===
                             1
-                              ? '1px solid #76652f'
+                              ? '1px solid var(--border)'
                               : result.is_me
-                                ? '1px solid #555'
-                                : '1px solid #303030',
+                                ? '1px solid var(--border)'
+                                : '1px solid var(--border)',
 
                           backgroundColor:
                             rank ===
                             1
-                              ? '#211e16'
-                              : '#1c1c1c',
+                              ? 'var(--surface-elevated)'
+                              : 'var(--surface)',
                         }}
                       >
                         {/* =====================
@@ -1734,8 +1734,8 @@ export default function UtaawaseRoomPage() {
                               color:
                                 rank ===
                                 1
-                                  ? '#ffda79'
-                                  : '#aaa',
+                                  ? 'var(--primary)'
+                                  : 'var(--foreground-muted)',
 
                               fontWeight:
                                 'bold',
@@ -1762,7 +1762,7 @@ export default function UtaawaseRoomPage() {
                               <div
                                 style={{
                                   color:
-                                    '#aaa',
+                                    'var(--foreground-muted)',
 
                                   fontSize:
                                     '0.78rem',
@@ -1773,7 +1773,7 @@ export default function UtaawaseRoomPage() {
                                 <strong
                                   style={{
                                     color:
-                                      '#ffda79',
+                                      'var(--primary)',
                                   }}
                                 >
                                   {Number(
@@ -1799,7 +1799,7 @@ export default function UtaawaseRoomPage() {
                                     'center',
 
                                   color:
-                                    '#a99e7f',
+                                    'var(--foreground-muted)',
 
                                   fontSize:
                                     '0.82rem',
@@ -1877,7 +1877,7 @@ export default function UtaawaseRoomPage() {
                                 'center',
 
                               color:
-                                '#666',
+                                'var(--foreground-muted)',
 
                               padding:
                                 '15px 0',
@@ -1894,7 +1894,7 @@ export default function UtaawaseRoomPage() {
                         <div
                           style={{
                             borderTop:
-                              '1px solid #303030',
+                              '1px solid var(--border)',
 
                             marginTop:
                               '20px',
@@ -1915,7 +1915,7 @@ export default function UtaawaseRoomPage() {
                           <div
                             style={{
                               color:
-                                '#888',
+                                'var(--foreground-muted)',
 
                               fontSize:
                                 '0.72rem',
@@ -1928,8 +1928,8 @@ export default function UtaawaseRoomPage() {
                             style={{
                               color:
                                 result.is_me
-                                  ? '#ffda79'
-                                  : '#ddd',
+                                  ? 'var(--primary)'
+                                  : 'var(--foreground)',
 
                               fontWeight:
                                 result.is_me
@@ -1960,7 +1960,7 @@ export default function UtaawaseRoomPage() {
                                 'right',
 
                               color:
-                                '#555',
+                                'var(--foreground-muted)',
 
                               fontSize:
                                 '0.65rem',
@@ -1995,13 +1995,13 @@ export default function UtaawaseRoomPage() {
                       '20px',
 
                     border:
-                      '1px solid #624343',
+                      '1px solid color-mix(in srgb, var(--danger) 55%, var(--border))',
                   }}
                 >
                   <div
                     style={{
                       color:
-                        '#ff9999',
+                        'var(--danger)',
 
                       fontWeight:
                         'bold',
@@ -2028,7 +2028,7 @@ export default function UtaawaseRoomPage() {
                     <div
                       style={{
                         color:
-                          '#888',
+                          'var(--foreground-muted)',
 
                         fontSize:
                           '0.8rem',
@@ -2054,7 +2054,7 @@ export default function UtaawaseRoomPage() {
                       <span
                         style={{
                           color:
-                            '#666',
+                            'var(--foreground-muted)',
 
                           margin:
                             '0 10px',
@@ -2089,11 +2089,11 @@ export default function UtaawaseRoomPage() {
                         color:
                           myResult.my_rating_change >
                           0
-                            ? '#ffda79'
+                            ? 'var(--primary)'
                             : myResult.my_rating_change <
                                 0
-                              ? '#ff8f8f'
-                              : '#aaa',
+                              ? 'var(--danger)'
+                              : 'var(--foreground-muted)',
                       }}
                     >
                       {myResult.my_rating_change >
@@ -2123,7 +2123,7 @@ export default function UtaawaseRoomPage() {
                 >
                   <div
                     style={{
-                      color: '#aaa',
+                      color: 'var(--foreground-muted)',
                       fontSize: '0.8rem',
                       marginBottom: '14px',
                       lineHeight: '1.7',
@@ -2150,7 +2150,7 @@ export default function UtaawaseRoomPage() {
                                   'block',
 
                                 color:
-                                  '#aaa',
+                                  'var(--foreground-muted)',
 
                                 fontSize:
                                   '0.75rem',
@@ -2166,7 +2166,7 @@ export default function UtaawaseRoomPage() {
                               <span
                                 style={{
                                   color:
-                                    '#666',
+                                    'var(--foreground-muted)',
 
                                   marginLeft:
                                     '6px',
@@ -2234,7 +2234,7 @@ export default function UtaawaseRoomPage() {
                               <span
                                 style={{
                                   color:
-                                    '#666',
+                                    'var(--foreground-muted)',
 
                                   fontSize:
                                     '0.68rem',
@@ -2251,7 +2251,7 @@ export default function UtaawaseRoomPage() {
                               <span
                                 style={{
                                   color:
-                                    '#555',
+                                    'var(--foreground-muted)',
 
                                   fontSize:
                                     '0.62rem',
@@ -2279,8 +2279,8 @@ export default function UtaawaseRoomPage() {
                               padding: '13px',
                               border: 'none',
                               borderRadius: '10px',
-                              backgroundColor: '#ffda79',
-                              color: '#121212',
+                              backgroundColor: 'var(--primary)',
+                              color: 'var(--page-background)',
                               fontWeight: 'bold',
                               cursor: roomActionLoading
                                 ? 'not-allowed'
@@ -2300,7 +2300,7 @@ export default function UtaawaseRoomPage() {
                       {sessionExpired && (
                         <div
                           style={{
-                            color: '#a99e7f',
+                            color: 'var(--foreground-muted)',
                             fontSize: '0.8rem',
                             marginBottom: '14px',
                           }}
@@ -2326,7 +2326,7 @@ export default function UtaawaseRoomPage() {
                   ) : (
                     <div
                       style={{
-                        color: '#888',
+                        color: 'var(--foreground-muted)',
                         fontSize: '0.82rem',
                         lineHeight: '1.8',
                       }}
@@ -2349,8 +2349,8 @@ export default function UtaawaseRoomPage() {
                     padding: '13px',
                     border: 'none',
                     borderRadius: '10px',
-                    backgroundColor: '#ffda79',
-                    color: '#121212',
+                    backgroundColor: 'var(--primary)',
+                    color: 'var(--page-background)',
                     fontWeight: 'bold',
                     cursor: 'pointer',
                   }}
@@ -2394,7 +2394,7 @@ export default function UtaawaseRoomPage() {
           <p
             style={{
               color:
-                '#aaa',
+                'var(--foreground-muted)',
 
               lineHeight:
                 '1.7',
@@ -2534,7 +2534,7 @@ export default function UtaawaseRoomPage() {
               <div
                 style={{
                   color:
-                    '#888',
+                    'var(--foreground-muted)',
 
                   fontSize:
                     '0.8rem',
@@ -2559,7 +2559,7 @@ export default function UtaawaseRoomPage() {
                   'center',
 
                 color:
-                  '#888',
+                  'var(--foreground-muted)',
               }}
             >
               次の句を開いています...
@@ -2592,7 +2592,7 @@ export default function UtaawaseRoomPage() {
                 <div
                   style={{
                     color:
-                      '#ffda79',
+                      'var(--primary)',
 
                     fontWeight:
                       'bold',
@@ -2607,7 +2607,7 @@ export default function UtaawaseRoomPage() {
                 <div
                   style={{
                     color:
-                      '#888',
+                      'var(--foreground-muted)',
 
                     fontSize:
                       '0.75rem',
@@ -2651,7 +2651,7 @@ export default function UtaawaseRoomPage() {
                   <div
                     style={{
                       color:
-                        '#a99e7f',
+                        'var(--foreground-muted)',
 
                       fontSize:
                         '0.88rem',
@@ -2730,7 +2730,7 @@ export default function UtaawaseRoomPage() {
               <div
                 style={{
                   borderTop:
-                    '1px solid #303030',
+                    '1px solid var(--border)',
 
                   paddingTop:
                     '20px',
@@ -2748,8 +2748,8 @@ export default function UtaawaseRoomPage() {
 
                     color:
                       selectedScore
-                        ? '#ffda79'
-                        : '#777',
+                        ? 'var(--primary)'
+                        : 'var(--foreground-muted)',
 
                     fontWeight:
                       'bold',
@@ -2816,7 +2816,7 @@ export default function UtaawaseRoomPage() {
                             '1.75rem',
 
                           color:
-                            '#ffda79',
+                            'var(--primary)',
                         }}
                       >
                         {selectedScore &&
@@ -2881,20 +2881,20 @@ export default function UtaawaseRoomPage() {
                           border:
                             selectedScore ===
                             score
-                              ? '1px solid #76652f'
-                              : '1px solid #333',
+                              ? '1px solid var(--border)'
+                              : '1px solid var(--border)',
 
                           backgroundColor:
                             selectedScore ===
                             score
-                              ? '#2d281b'
-                              : '#171717',
+                              ? 'var(--surface-elevated)'
+                              : 'var(--surface)',
 
                           color:
                             selectedScore ===
                             score
-                              ? '#ffda79'
-                              : '#888',
+                              ? 'var(--primary)'
+                              : 'var(--foreground-muted)',
 
                           cursor:
                             'pointer',
@@ -2945,13 +2945,13 @@ export default function UtaawaseRoomPage() {
 
                     backgroundColor:
                       selectedScore
-                        ? '#ffda79'
-                        : '#444',
+                        ? 'var(--primary)'
+                        : 'var(--foreground-muted)',
 
                     color:
                       selectedScore
-                        ? '#121212'
-                        : '#888',
+                        ? 'var(--page-background)'
+                        : 'var(--foreground-muted)',
 
                     fontWeight:
                       'bold',
@@ -2980,7 +2980,7 @@ export default function UtaawaseRoomPage() {
                     '16px',
 
                   color:
-                    '#666',
+                    'var(--foreground-muted)',
 
                   fontSize:
                     '0.7rem',
@@ -3118,7 +3118,7 @@ export default function UtaawaseRoomPage() {
             <div
               style={{
                 color:
-                  '#888',
+                  'var(--foreground-muted)',
 
                 fontSize:
                   '0.8rem',
@@ -3154,7 +3154,7 @@ export default function UtaawaseRoomPage() {
               <span
                 style={{
                   color:
-                    '#666',
+                    'var(--foreground-muted)',
 
                   marginLeft:
                     '6px',
@@ -3322,7 +3322,7 @@ export default function UtaawaseRoomPage() {
             <div
               style={{
                 color:
-                  '#777',
+                  'var(--foreground-muted)',
 
                 fontSize:
                   '0.72rem',
@@ -3369,10 +3369,10 @@ export default function UtaawaseRoomPage() {
                   '10px',
 
                 backgroundColor:
-                  '#ffda79',
+                  'var(--primary)',
 
                 color:
-                  '#121212',
+                  'var(--page-background)',
 
                 fontWeight:
                   'bold',
@@ -3408,7 +3408,7 @@ export default function UtaawaseRoomPage() {
               '16px',
 
             color:
-              '#666',
+              'var(--foreground-muted)',
 
             fontSize:
               '0.7rem',
@@ -3459,7 +3459,7 @@ function ThemeCard({
       <div
         style={{
           color:
-            '#888',
+            'var(--foreground-muted)',
 
           fontSize:
             '0.75rem',
@@ -3483,7 +3483,7 @@ function ThemeCard({
             '0.15em',
 
           color:
-            '#ffda79',
+            'var(--primary)',
         }}
       >
         「
@@ -3521,8 +3521,8 @@ function Timer({
 
         color:
           danger
-            ? '#ff8f8f'
-            : '#ffda79',
+            ? 'var(--danger)'
+            : 'var(--primary)',
       }}
     >
       {time}
@@ -3546,10 +3546,10 @@ function FullScreenMessage({
           '100vh',
 
         backgroundColor:
-          '#121212',
+          'var(--page-background)',
 
         color:
-          '#888',
+          'var(--foreground-muted)',
 
         display:
           'flex',
@@ -3575,10 +3575,10 @@ const pageStyle = {
     '100vh',
 
   backgroundColor:
-    '#121212',
+    'var(--page-background)',
 
   color:
-    '#fff',
+    'var(--foreground)',
 
   paddingBottom:
     '100px',
@@ -3603,10 +3603,10 @@ const mainStyle = {
 
 const cardStyle = {
   backgroundColor:
-    '#1c1c1c',
+    'var(--surface)',
 
   border:
-    '1px solid #303030',
+    '1px solid var(--border)',
 
   borderRadius:
     '16px',
@@ -3620,7 +3620,7 @@ const labelStyle = {
     'block',
 
   color:
-    '#aaa',
+    'var(--foreground-muted)',
 
   fontSize:
     '0.78rem',
@@ -3640,16 +3640,16 @@ const inputStyle = {
     'border-box' as const,
 
   backgroundColor:
-    '#141414',
+    'var(--surface)',
 
   border:
-    '1px solid #383838',
+    '1px solid var(--border)',
 
   borderRadius:
     '9px',
 
   color:
-    '#fff',
+    'var(--foreground)',
 
   padding:
     '12px',
@@ -3678,13 +3678,13 @@ const secondaryButton = {
     '9px',
 
   border:
-    '1px solid #444',
+    '1px solid var(--border)',
 
   backgroundColor:
-    '#222',
+    'var(--surface-elevated)',
 
   color:
-    '#ddd',
+    'var(--foreground)',
 
   cursor:
     'pointer',

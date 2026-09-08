@@ -639,7 +639,7 @@ export default function NotificationsPage() {
             <div
               style={{
                 color:
-                  '#a99e7f',
+                  'var(--foreground-muted)',
 
                 fontSize:
                   '0.72rem',
@@ -835,7 +835,7 @@ export default function NotificationsPage() {
             <div
               style={{
                 color:
-                  '#777',
+                  'var(--foreground-muted)',
 
                 fontSize:
                   '0.76rem',
@@ -982,7 +982,7 @@ function TabButton({
 
         borderBottom:
           active
-            ? '2px solid #ffda79'
+            ? '2px solid var(--primary)'
             : '2px solid transparent',
 
         background:
@@ -990,8 +990,8 @@ function TabButton({
 
         color:
           active
-            ? '#ffda79'
-            : '#777',
+            ? 'var(--primary)'
+            : 'var(--foreground-muted)',
 
         padding:
           '11px 5px',
@@ -1063,13 +1063,13 @@ function NotificationCard({
 
         backgroundColor:
           item.is_read
-            ? '#1c1c1c'
-            : '#211f18',
+            ? 'var(--surface)'
+            : 'var(--surface-elevated)',
 
         border:
           item.is_read
-            ? '1px solid #303030'
-            : '1px solid #514828',
+            ? '1px solid var(--border)'
+            : '1px solid var(--border)',
       }}
     >
       {/* アイコン */}
@@ -1099,7 +1099,7 @@ function NotificationCard({
             '50%',
 
           border:
-            '1px solid #3a3a3a',
+            '1px solid var(--border)',
 
           overflow:
             'hidden',
@@ -1108,10 +1108,10 @@ function NotificationCard({
             0,
 
           backgroundColor:
-            '#292929',
+            'var(--surface-elevated)',
 
           color:
-            '#888',
+            'var(--foreground-muted)',
 
           cursor:
             item.actor_user_id
@@ -1179,7 +1179,7 @@ function NotificationCard({
         <div
           style={{
             color:
-              '#eee',
+              'var(--foreground)',
 
             fontSize:
               '0.82rem',
@@ -1197,7 +1197,7 @@ function NotificationCard({
         <div
           style={{
             color:
-              '#666',
+              'var(--foreground-muted)',
 
             fontSize:
               '0.65rem',
@@ -1297,8 +1297,8 @@ function NotificationCard({
                   color:
                     item.invite_status ===
                     'accepted'
-                      ? '#9ed89e'
-                      : '#777',
+                      ? 'var(--success)'
+                      : 'var(--foreground-muted)',
 
                   fontSize:
                     '0.72rem',
@@ -1337,10 +1337,10 @@ function FullScreenMessage({
           '100vh',
 
         backgroundColor:
-          '#121212',
+          'var(--page-background)',
 
         color:
-          '#888',
+          'var(--foreground-muted)',
 
         display:
           'flex',
@@ -1369,10 +1369,10 @@ const pageStyle = {
     '100vh',
 
   backgroundColor:
-    '#121212',
+    'var(--page-background)',
 
   color:
-    '#fff',
+    'var(--foreground)',
 
   paddingBottom:
     '100px',
@@ -1400,7 +1400,7 @@ const tabsStyle = {
     'flex',
 
   borderBottom:
-    '1px solid #2b2b2b',
+    '1px solid var(--border)',
 
   marginBottom:
     '18px',
@@ -1408,10 +1408,10 @@ const tabsStyle = {
 
 const cardStyle = {
   backgroundColor:
-    '#1c1c1c',
+    'var(--surface)',
 
   border:
-    '1px solid #303030',
+    '1px solid var(--border)',
 
   borderRadius:
     '14px',
@@ -1434,10 +1434,10 @@ const primaryButtonStyle = {
     '10px',
 
   backgroundColor:
-    '#ffda79',
+    'var(--primary)',
 
   color:
-    '#121212',
+    'var(--page-background)',
 
   fontWeight:
     'bold',
@@ -1454,7 +1454,7 @@ const secondaryButtonStyle = {
     '100%',
 
   border:
-    '1px solid #444',
+    '1px solid var(--border)',
 
   borderRadius:
     '9px',
@@ -1463,10 +1463,10 @@ const secondaryButtonStyle = {
     '10px',
 
   backgroundColor:
-    '#242424',
+    'var(--surface-elevated)',
 
   color:
-    '#ddd',
+    'var(--foreground)',
 
   fontWeight:
     'bold',
@@ -1480,16 +1480,16 @@ const secondaryButtonStyle = {
 
 const backButtonStyle = {
   border:
-    '1px solid #333',
+    '1px solid var(--border)',
 
   borderRadius:
     '8px',
 
   backgroundColor:
-    '#1b1b1b',
+    'var(--surface)',
 
   color:
-    '#aaa',
+    'var(--foreground-muted)',
 
   padding:
     '7px 10px',
@@ -1503,13 +1503,13 @@ const backButtonStyle = {
 
 const errorStyle = {
   backgroundColor:
-    '#2c1818',
+    'color-mix(in srgb, var(--danger) 16%, var(--surface))',
 
   border:
-    '1px solid #633',
+    '1px solid color-mix(in srgb, var(--danger) 55%, var(--border))',
 
   color:
-    '#ffaaaa',
+    'var(--danger)',
 
   padding:
     '13px',
