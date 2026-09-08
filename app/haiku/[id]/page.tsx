@@ -338,32 +338,32 @@ export default function HaikuDetail() {
   }
 
   if (isLoading && !haiku) {
-    return <div style={{ backgroundColor: '#121212', color: '#fff', minHeight: '100vh', padding: '20px' }}>読み込み中...</div>
+    return <div style={{ backgroundColor: 'var(--page-background)', color: 'var(--foreground)', minHeight: '100vh', padding: '20px' }}>読み込み中...</div>
   }
 
   if (!haiku) {
-    return <div style={{ backgroundColor: '#121212', color: '#fff', minHeight: '100vh', padding: '20px' }}>俳句が見つかりませんでした。</div>
+    return <div style={{ backgroundColor: 'var(--page-background)', color: 'var(--foreground)', minHeight: '100vh', padding: '20px' }}>俳句が見つかりませんでした。</div>
   }
 
   return (
-    <div style={{ backgroundColor: '#121212', color: '#fff', minHeight: '100vh', paddingBottom: '80px' }}>
+    <div style={{ backgroundColor: 'var(--page-background)', color: 'var(--foreground)', minHeight: '100vh', paddingBottom: '80px' }}>
       <main style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
         
         {/* 戻るボタン */}
         <button 
           onClick={() => router.back()} 
-          style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', marginBottom: '20px', fontSize: '0.95rem' }}
+          style={{ background: 'none', border: 'none', color: 'var(--foreground-muted)', cursor: 'pointer', marginBottom: '20px', fontSize: '0.95rem' }}
         >
           ← 戻る
         </button>
 
         {/* 元の俳句 */}
         <div style={{ 
-          backgroundColor: '#1e1e1e', 
+          backgroundColor: 'var(--surface)',
           borderRadius: '16px', 
           padding: '20px', 
-          border: '1px solid #2a2a2a',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          border: '1px solid var(--border)',
+          boxShadow: '0 4px 12px var(--shadow)',
           marginBottom: '20px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
@@ -378,16 +378,16 @@ export default function HaikuDetail() {
                 style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', cursor: 'pointer' }} 
               />
             ) : (
-              <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#444' }} />
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--surface-elevated)' }} />
             )}
             <div>
               <div 
                 onClick={() => haiku.user_id && router.push(`/user/${haiku.user_id}`)}
-                style={{ fontWeight: 'bold', fontSize: '0.95rem', cursor: 'pointer', color: '#fff' }}
+                style={{ fontWeight: 'bold', fontSize: '0.95rem', cursor: 'pointer', color: 'var(--foreground)' }}
               >
                 {haiku.author || '名無し'}
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#888' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--foreground-muted)' }}>
                 {formatDate(haiku.created_at)}
               </div>
             </div>
@@ -395,11 +395,11 @@ export default function HaikuDetail() {
 
           <div style={{ 
             marginBottom: '20px', 
-            color: '#fff',
+            color: 'var(--foreground)',
             textAlign: 'center'
           }}>
             {haiku.joshi && (
-              <div style={{ fontSize: '0.95rem', color: '#b0a892', marginBottom: '12px', fontStyle: 'italic' }}>
+              <div style={{ fontSize: '0.95rem', color: 'var(--foreground-muted)', marginBottom: '12px', fontStyle: 'italic' }}>
                 {haiku.joshi}
               </div>
             )}
@@ -412,28 +412,28 @@ export default function HaikuDetail() {
 
           {haiku.description && (
             <div style={{ 
-              backgroundColor: '#252525', 
+              backgroundColor: 'var(--surface-elevated)',
               padding: '14px', 
               borderRadius: '10px', 
               marginBottom: '20px', 
               fontSize: '0.9rem', 
-              color: '#ccc',
+              color: 'var(--foreground)',
               lineHeight: '1.6',
-              borderLeft: '3px solid #ffda79'
+              borderLeft: '3px solid var(--primary)'
             }}>
-              <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '4px', fontWeight: 'bold' }}>句の解説・想い</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--foreground-muted)', marginBottom: '4px', fontWeight: 'bold' }}>句の解説・想い</div>
               {haiku.description}
             </div>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', borderTop: '1px solid #2a2a2a', paddingTop: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
             <button
               onClick={handleLike}
               style={{
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                color: isLiked ? '#ff4757' : '#aaa',
+                color: isLiked ? 'var(--primary)' : 'var(--foreground-muted)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
@@ -454,7 +454,7 @@ export default function HaikuDetail() {
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                color: isReplyFormOpen ? '#ffda79' : '#aaa',
+                color: isReplyFormOpen ? 'var(--primary)' : 'var(--foreground-muted)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
@@ -469,12 +469,12 @@ export default function HaikuDetail() {
 
         {/* 返歌フォーム */}
         {isReplyFormOpen && (
-          <section style={{ marginBottom: '30px', backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '16px', border: '1px solid #ffda79' }}>
+          <section style={{ marginBottom: '30px', backgroundColor: 'var(--surface)', padding: '20px', borderRadius: '16px', border: '1px solid var(--primary)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-              <h3 style={{ fontSize: '1.1rem', margin: 0, color: '#ffda79' }}>返歌を詠む（下の句 7・7）</h3>
+              <h3 style={{ fontSize: '1.1rem', margin: 0, color: 'var(--primary)' }}>返歌を詠む（下の句 7・7）</h3>
               <button 
                 onClick={() => setIsReplyFormOpen(false)}
-                style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '1rem' }}
+                style={{ background: 'none', border: 'none', color: 'var(--foreground-muted)', cursor: 'pointer', fontSize: '1rem' }}
               >
                 ✕ 閉じる
               </button>
@@ -489,11 +489,11 @@ export default function HaikuDetail() {
                   onChange={(e) => setSecondLine(e.target.value)} 
                   maxLength={10}
                   required 
-                  style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '8px', border: '1px solid #444', backgroundColor: '#2a2a2a', color: '#fff' }} 
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'var(--input-background)', color: 'var(--foreground)' }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '0.8rem' }}>
-                  <span style={{ color: '#aaa' }}>{replySecondLength}/10文字</span>
-                  <span style={{ color: replySecondError ? '#ff6b6b' : 'transparent' }}>{replySecondError || ' '}</span>
+                  <span style={{ color: 'var(--foreground-muted)' }}>{replySecondLength}/10文字</span>
+                  <span style={{ color: replySecondError ? 'var(--danger)' : 'transparent' }}>{replySecondError || ' '}</span>
                 </div>
               </div>
               <div>
@@ -504,11 +504,11 @@ export default function HaikuDetail() {
                   onChange={(e) => setThirdLine(e.target.value)} 
                   maxLength={10}
                   required 
-                  style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '8px', border: '1px solid #444', backgroundColor: '#2a2a2a', color: '#fff' }} 
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'var(--input-background)', color: 'var(--foreground)' }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '0.8rem' }}>
-                  <span style={{ color: '#aaa' }}>{replyThirdLength}/10文字</span>
-                  <span style={{ color: replyThirdError ? '#ff6b6b' : 'transparent' }}>{replyThirdError || ' '}</span>
+                  <span style={{ color: 'var(--foreground-muted)' }}>{replyThirdLength}/10文字</span>
+                  <span style={{ color: replyThirdError ? 'var(--danger)' : 'transparent' }}>{replyThirdError || ' '}</span>
                 </div>
               </div>
               <button 
@@ -518,8 +518,8 @@ export default function HaikuDetail() {
                   marginTop: '5px', 
                   padding: '12px', 
                   borderRadius: '8px', 
-                  backgroundColor: '#ffda79', 
-                  color: '#121212', 
+                  backgroundColor: 'var(--primary)',
+                  color: 'var(--primary-foreground)',
                   fontWeight: 'bold', 
                   border: 'none', 
                   cursor: isReplyValid ? 'pointer' : 'not-allowed',
@@ -536,7 +536,7 @@ export default function HaikuDetail() {
         <section>
           <h2 style={{ fontSize: '1.2rem', marginBottom: '15px' }}>返歌一覧 ({replies.length})</h2>
           {replies.length === 0 ? (
-            <p style={{ color: '#888', fontSize: '0.95rem' }}>まだ返歌はありません。最初の返歌（7・7）を詠んでみましょう！</p>
+            <p style={{ color: 'var(--foreground-muted)', fontSize: '0.95rem' }}>まだ返歌はありません。最初の返歌（7・7）を詠んでみましょう！</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               {replies.map((reply) => {
@@ -545,8 +545,8 @@ export default function HaikuDetail() {
                 const isBestReply = bestReplyId === String(reply.id)
 
                 return (
-                  <div key={reply.id} style={{ backgroundColor: '#1e1e1e', borderRadius: '16px', padding: '20px', border: isBestReply ? '1px solid #ffda79' : '1px solid #2a2a2a' }}>
-                    {isBestReply && <div style={{ color: '#ffda79', fontWeight: 'bold', marginBottom: 10 }}>金選・ベスト返歌</div>}
+                  <div key={reply.id} style={{ backgroundColor: 'var(--surface)', borderRadius: '16px', padding: '20px', border: isBestReply ? '1px solid var(--primary)' : '1px solid var(--border)' }}>
+                    {isBestReply && <div style={{ color: 'var(--primary)', fontWeight: 'bold', marginBottom: 10 }}>金選・ベスト返歌</div>}
                     
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -560,28 +560,28 @@ export default function HaikuDetail() {
                             unoptimized
                           />
                         )}
-                        <span style={{ color: '#ccc', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                        <span style={{ color: 'var(--foreground)', fontSize: '0.9rem', fontWeight: 'bold' }}>
                           {reply.author || '名無し'}
                         </span>
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: '#888' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--foreground-muted)' }}>
                         {formatDate(reply.created_at)}
                       </div>
                     </div>
 
                     <div style={{ padding: '10px 0 15px 0', textAlign: 'left', lineHeight: '1.8' }}>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ffda79', marginLeft: 0 }}>{reply.second_line}</div>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ffda79', marginLeft: '1.4rem' }}>{reply.third_line}</div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--primary)', marginLeft: 0 }}>{reply.second_line}</div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--primary)', marginLeft: '1.4rem' }}>{reply.third_line}</div>
                     </div>
 
-                    <div style={{ borderTop: '1px solid #2a2a2a', paddingTop: '10px', display: 'flex', alignItems: 'center' }}>
+                    <div style={{ borderTop: '1px solid var(--border)', paddingTop: '10px', display: 'flex', alignItems: 'center' }}>
                       <button
                         onClick={() => handleReplyLike(reply.id)}
                         style={{
                           background: 'none',
                           border: 'none',
                           cursor: 'pointer',
-                          color: isReplyLiked ? '#ff4757' : '#aaa',
+                          color: isReplyLiked ? 'var(--primary)' : 'var(--foreground-muted)',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '6px',

@@ -111,7 +111,7 @@ export default function TitlesPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
                 <div>
                   <h2 style={{ margin: 0, fontSize: 18 }}>{title.name}</h2>
-                  <p style={{ color: '#bda991', marginBottom: 0 }}>{title.description}</p>
+                  <p style={{ color: 'var(--foreground-muted)', marginBottom: 0 }}>{title.description}</p>
                 </div>
                 <Button
                   type="button"

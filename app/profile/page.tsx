@@ -84,7 +84,7 @@ export default function ProfilePage() {
   return (
     <main style={{ padding: '20px', maxWidth: '400px', margin: '50px auto' }}>
       <h1>プロフィール設定</h1>
-      {isLoading && <p style={{ color: '#666', marginTop: '10px' }}>読み込み中...</p>}
+      {isLoading && <p style={{ color: 'var(--foreground-muted)', marginTop: '10px' }}>読み込み中...</p>}
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' }}>
         <div>
           <label style={{ display: 'block', marginBottom: '5px' }}>ユーザー名（表示名）</label>

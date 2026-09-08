@@ -336,8 +336,8 @@ export default function RankingPage() {
       <div
         style={{
           minHeight: '100vh',
-          backgroundColor: '#121212',
-          color: '#777',
+          backgroundColor: 'var(--page-background)',
+          color: 'var(--foreground-muted)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -356,8 +356,8 @@ export default function RankingPage() {
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#121212',
-        color: '#fff',
+        backgroundColor: 'var(--page-background)',
+        color: 'var(--foreground)',
         paddingBottom: '100px',
       }}
     >
@@ -392,7 +392,7 @@ export default function RankingPage() {
           <p
             style={{
               margin: 0,
-              color: '#888',
+              color: 'var(--foreground-muted)',
               fontSize: '0.8rem',
               lineHeight: '1.7',
             }}
@@ -420,8 +420,8 @@ export default function RankingPage() {
 
         <section
           style={{
-            backgroundColor: '#191919',
-            border: '1px solid #2a2a2a',
+            backgroundColor: 'var(--surface)',
+            border: '1px solid var(--border)',
             borderRadius: '14px',
             padding: '15px',
             marginBottom: '24px',
@@ -456,12 +456,12 @@ export default function RankingPage() {
                 <div
                   key={rank}
                   style={{
-                    backgroundColor: '#242424',
-                    border: '1px solid #333',
+                    backgroundColor: 'var(--surface-elevated)',
+                    border: '1px solid var(--border)',
                     borderRadius: '20px',
                     padding: '6px 10px',
                     fontSize: '0.78rem',
-                    color: '#ccc',
+                    color: 'var(--foreground)',
                   }}
                 >
                   {getRankSymbol(rank)}
@@ -474,10 +474,10 @@ export default function RankingPage() {
 
           <div
             style={{
-              borderTop: '1px solid #2f2f2f',
+              borderTop: '1px solid var(--border)',
               marginTop: '13px',
               paddingTop: '12px',
-              color: '#a99e7f',
+              color: 'var(--foreground-muted)',
               fontSize: '0.76rem',
               lineHeight: '1.7',
             }}
@@ -510,7 +510,7 @@ export default function RankingPage() {
 
           <div
             style={{
-              color: '#777',
+              color: 'var(--foreground-muted)',
               fontSize: '0.72rem',
             }}
           >
@@ -526,7 +526,7 @@ export default function RankingPage() {
           <div
             style={{
               textAlign: 'center',
-              color: '#777',
+              color: 'var(--foreground-muted)',
               padding: '50px 20px',
             }}
           >
@@ -620,18 +620,18 @@ function MyRankingCard({
   return (
     <section
       style={{
-        backgroundColor: '#211f19',
-        border: '1px solid #554923',
+        backgroundColor: 'var(--surface-elevated)',
+        border: '1px solid var(--border)',
         borderRadius: '16px',
         padding: '18px',
         marginBottom: '18px',
         boxShadow:
-          '0 4px 15px rgba(0,0,0,0.25)',
+          '0 4px 15px var(--shadow)',
       }}
     >
       <div
         style={{
-          color: '#a99e7f',
+          color: 'var(--foreground-muted)',
           fontSize: '0.75rem',
           marginBottom: '8px',
         }}
@@ -652,7 +652,7 @@ function MyRankingCard({
             style={{
               fontSize: '1.45rem',
               fontWeight: 'bold',
-              color: '#ffda79',
+              color: 'var(--primary)',
             }}
           >
             {getRankSymbol(
@@ -664,7 +664,7 @@ function MyRankingCard({
 
           <div
             style={{
-              color: '#999',
+              color: 'var(--foreground-muted)',
               fontSize: '0.8rem',
               marginTop: '4px',
             }}
@@ -691,7 +691,7 @@ function MyRankingCard({
 
           <div
             style={{
-              color: '#777',
+              color: 'var(--foreground-muted)',
               fontSize: '0.7rem',
             }}
           >
@@ -707,7 +707,7 @@ function MyRankingCard({
           <div
             style={{
               height: '6px',
-              backgroundColor: '#333',
+              backgroundColor: 'var(--surface-elevated)',
               borderRadius: '10px',
               overflow: 'hidden',
               marginTop: '16px',
@@ -717,7 +717,7 @@ function MyRankingCard({
               style={{
                 width: `${progress}%`,
                 height: '100%',
-                backgroundColor: '#ffda79',
+                backgroundColor: 'var(--primary)',
                 borderRadius: '10px',
               }}
             />
@@ -726,7 +726,7 @@ function MyRankingCard({
           <div
             style={{
               marginTop: '7px',
-              color: '#888',
+              color: 'var(--foreground-muted)',
               fontSize: '0.73rem',
               textAlign: 'right',
             }}
@@ -735,7 +735,7 @@ function MyRankingCard({
             {' '}
             <strong
               style={{
-                color: '#ddd',
+                color: 'var(--foreground)',
               }}
             >
               {remaining}
@@ -746,7 +746,7 @@ function MyRankingCard({
         <div
           style={{
             marginTop: '14px',
-            color: '#d0c59f',
+            color: 'var(--foreground-muted)',
             fontSize: '0.76rem',
           }}
         >
@@ -785,14 +785,14 @@ function RankingRow({
       style={{
         width: '100%',
         backgroundColor: isMe
-          ? '#252219'
-          : '#1b1b1b',
+          ? 'var(--surface-elevated)'
+          : 'var(--surface)',
         border: isMe
-          ? '1px solid #554923'
-          : '1px solid #292929',
+          ? '1px solid var(--border)'
+          : '1px solid var(--border)',
         borderRadius: '12px',
         padding: '12px',
-        color: '#fff',
+        color: 'var(--foreground)',
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
@@ -813,8 +813,8 @@ function RankingRow({
               : '0.85rem',
           color:
             position <= 3
-              ? '#ffda79'
-              : '#888',
+              ? 'var(--primary)'
+              : 'var(--foreground-muted)',
           flexShrink: 0,
         }}
       >
@@ -847,7 +847,7 @@ function RankingRow({
             width: '42px',
             height: '42px',
             borderRadius: '50%',
-            backgroundColor: '#444',
+            backgroundColor: 'var(--surface-elevated)',
             flexShrink: 0,
           }}
         />
@@ -876,7 +876,7 @@ function RankingRow({
           {isMe && (
             <span
               style={{
-                color: '#ffda79',
+                color: 'var(--primary)',
                 fontSize: '0.68rem',
                 marginLeft: '6px',
               }}
@@ -888,7 +888,7 @@ function RankingRow({
 
         <div
           style={{
-            color: '#999',
+            color: 'var(--foreground-muted)',
             fontSize: '0.73rem',
             marginTop: '3px',
           }}
@@ -920,7 +920,7 @@ function RankingRow({
 
         <div
           style={{
-            color: '#666',
+            color: 'var(--foreground-muted)',
             fontSize: '0.65rem',
           }}
         >

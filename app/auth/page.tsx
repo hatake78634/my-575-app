@@ -162,8 +162,8 @@ export default function AuthPage() {
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#121212',
-        color: '#fff',
+        backgroundColor: 'var(--page-background)',
+        color: 'var(--foreground)',
         padding: '40px 20px',
         boxSizing: 'border-box',
       }}
@@ -175,8 +175,8 @@ export default function AuthPage() {
           margin: '0 auto',
           padding: '25px',
           boxSizing: 'border-box',
-          backgroundColor: '#1e1e1e',
-          border: '1px solid #2a2a2a',
+          backgroundColor: 'var(--surface)',
+          border: '1px solid var(--border)',
           borderRadius: '16px',
         }}
       >
@@ -200,7 +200,7 @@ export default function AuthPage() {
 
           <div
             style={{
-              color: '#ffda79',
+              color: 'var(--primary)',
               letterSpacing: '4px',
               fontSize: '0.9rem',
             }}
@@ -210,7 +210,7 @@ export default function AuthPage() {
 
           <p
             style={{
-              color: '#888',
+              color: 'var(--foreground-muted)',
               fontSize: '0.85rem',
               marginTop: '15px',
               marginBottom: 0,
@@ -237,12 +237,12 @@ export default function AuthPage() {
         {errorMessage && (
           <div
             style={{
-              color: '#ff6b6b',
+              color: 'var(--danger)',
               marginBottom: '15px',
               padding: '10px',
-              backgroundColor: '#3a1a1a',
+              backgroundColor: 'color-mix(in srgb, var(--danger) 16%, var(--surface))',
               borderRadius: '8px',
-              border: '1px solid #ff6b6b',
+              border: '1px solid var(--danger)',
               fontSize: '0.9rem',
             }}
           >
@@ -269,7 +269,7 @@ export default function AuthPage() {
                   display: 'block',
                   marginBottom: '6px',
                   fontSize: '0.85rem',
-                  color: '#ccc',
+                  color: 'var(--foreground)',
                 }}
               >
                 歌人名
@@ -296,7 +296,7 @@ export default function AuthPage() {
                 display: 'block',
                 marginBottom: '6px',
                 fontSize: '0.85rem',
-                color: '#ccc',
+                color: 'var(--foreground)',
               }}
             >
               メールアドレス
@@ -323,7 +323,7 @@ export default function AuthPage() {
                 display: 'block',
                 marginBottom: '6px',
                 fontSize: '0.85rem',
-                color: '#ccc',
+                color: 'var(--foreground)',
               }}
             >
               パスワード
@@ -354,8 +354,8 @@ export default function AuthPage() {
             disabled={loading}
             style={{
               padding: '13px',
-              backgroundColor: '#ffda79',
-              color: '#121212',
+              backgroundColor: 'var(--primary)',
+              color: 'var(--primary-foreground)',
               border: 'none',
               borderRadius: '8px',
               cursor: loading
@@ -382,7 +382,7 @@ export default function AuthPage() {
             marginTop: '25px',
             textAlign: 'center',
             fontSize: '0.85rem',
-            color: '#aaa',
+            color: 'var(--foreground-muted)',
           }}
         >
           {isSignUp
@@ -398,7 +398,7 @@ export default function AuthPage() {
               marginTop: '8px',
               background: 'none',
               border: 'none',
-              color: '#ffda79',
+              color: 'var(--primary)',
               cursor: 'pointer',
               textDecoration: 'underline',
               fontSize: '0.9rem',
@@ -420,7 +420,7 @@ export default function AuthPage() {
             margin: '25px auto 0',
             background: 'none',
             border: 'none',
-            color: '#777',
+            color: 'var(--foreground-muted)',
             cursor: 'pointer',
             fontSize: '0.8rem',
           }}
@@ -436,9 +436,9 @@ const inputStyle = {
   width: '100%',
   padding: '12px',
   boxSizing: 'border-box' as const,
-  backgroundColor: '#2a2a2a',
-  border: '1px solid #444',
-  color: '#fff',
+  backgroundColor: 'var(--input-background)',
+  border: '1px solid var(--border)',
+  color: 'var(--foreground)',
   borderRadius: '8px',
   outline: 'none',
   fontSize: '1rem',
