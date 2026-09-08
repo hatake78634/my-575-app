@@ -21,6 +21,7 @@ import BottomNav from '../../components/BottomNav'
 import Avatar from '../../components/Avatar'
 
 import { useAuth } from '../../hooks/useAuth'
+import { useAvatarFrames } from '../../hooks/useAvatarFrames'
 
 // =============================
 // 型
@@ -152,6 +153,11 @@ export default function UserPage() {
     haikus,
     setHaikus,
   ] = useState<Haiku[]>([])
+
+  const avatarFrames = useAvatarFrames([
+    profile?.id,
+    ...haikus.map((haiku) => haiku.user_id),
+  ])
 
   const [
     isLoading,
@@ -1141,6 +1147,8 @@ export default function UserPage() {
 
                   size={80}
 
+                  frame={avatarFrames[profile.id]}
+
                   style={{
                     border:
                       '2px solid var(--border)',
@@ -1490,6 +1498,12 @@ export default function UserPage() {
 
                   currentUserId={
                     currentUserId
+                  }
+
+                  avatarFrame={
+                    haiku.user_id
+                      ? avatarFrames[haiku.user_id]
+                      : null
                   }
                 />
               )

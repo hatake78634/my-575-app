@@ -13,6 +13,7 @@ import { supabase } from '../../lib/supabase'
 import BottomNav from '../components/BottomNav'
 import Avatar from '../components/Avatar'
 import { useAuth } from '../hooks/useAuth'
+import { useAvatarFrames } from '../hooks/useAvatarFrames'
 
 // =============================
 // 型
@@ -138,6 +139,10 @@ export default function RankingPage() {
     profiles,
     setProfiles,
   ] = useState<RankingProfile[]>([])
+
+  const avatarFrames = useAvatarFrames(
+    profiles.map((profile) => profile.id)
+  )
 
   const [
     loading,
@@ -548,6 +553,7 @@ export default function RankingPage() {
                 <RankingRow
                   key={profile.id}
                   profile={profile}
+                  avatarFrame={avatarFrames[profile.id]}
                   position={index + 1}
                   isMe={
                     String(profile.id) ===
@@ -763,11 +769,13 @@ function MyRankingCard({
 
 function RankingRow({
   profile,
+  avatarFrame,
   position,
   isMe,
   onClick,
 }: {
   profile: RankingProfile
+  avatarFrame: string | undefined
   position: number
   isMe: boolean
   onClick: () => void
@@ -832,6 +840,7 @@ function RankingRow({
           src={profile.avatar_url}
           name={profile.username ?? '歌人'}
           size={42}
+          frame={avatarFrame}
           style={{
             flexShrink: 0,
           }}

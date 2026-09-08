@@ -15,6 +15,7 @@ import Avatar from '../../../components/Avatar'
 import {
   supabase,
 } from '@/lib/supabase'
+import { useAvatarFrames } from '../../../hooks/useAvatarFrames'
 
 
 // =============================
@@ -57,6 +58,10 @@ export default function PublicUtaawaseLobbyPage() {
 
   const [members, setMembers] =
     useState<LobbyMember[]>([])
+
+  const avatarFrames = useAvatarFrames(
+    members.map((member) => member.member_user_id)
+  )
 
   const [loading, setLoading] =
     useState(true)
@@ -888,6 +893,8 @@ export default function PublicUtaawaseLobbyPage() {
                           name={member.member_username}
 
                           size={44}
+
+                          frame={avatarFrames[member.member_user_id]}
                         />
                       ) : (
                         <span

@@ -22,6 +22,7 @@ import TimelineTabs, {
 } from './components/TimelineTabs'
 
 import { useAuth } from './hooks/useAuth'
+import { useAvatarFrames } from './hooks/useAvatarFrames'
 
 // =============================
 // 型
@@ -182,6 +183,10 @@ export default function Home() {
     haikus,
     setHaikus,
   ] = useState<Haiku[]>([])
+
+  const avatarFrames = useAvatarFrames(
+    haikus.map((haiku) => haiku.user_id)
+  )
 
   const [
     isLoading,
@@ -2340,6 +2345,12 @@ export default function Home() {
 
                 currentUserId={
                   userId
+                }
+
+                avatarFrame={
+                  haiku.user_id
+                    ? avatarFrames[haiku.user_id]
+                    : null
                 }
               />
             )

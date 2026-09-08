@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 import Avatar from '../../components/Avatar'
 import ShareButton from '../../components/ShareButton'
+import { useAvatarFrames } from '../../hooks/useAvatarFrames'
 
 type Haiku = {
   id: string
@@ -37,6 +38,10 @@ export default function HaikuDetail() {
 
   const [haiku, setHaiku] = useState<Haiku | null>(null)
   const [replies, setReplies] = useState<Reply[]>([])
+  const avatarFrames = useAvatarFrames([
+    haiku?.user_id,
+    ...replies.map((reply) => reply.user_id),
+  ])
 
   // 返歌用の入力フォーム
   const [secondLine, setSecondLine] = useState('')
@@ -372,6 +377,7 @@ export default function HaikuDetail() {
                 src={haiku.avatar_url} 
                 name={haiku.author}
                 size={40}
+                frame={haiku.user_id ? avatarFrames[haiku.user_id] : null}
                 onClick={() => haiku.user_id && router.push(`/user/${haiku.user_id}`)}
                 style={{ cursor: 'pointer' }}
               />
@@ -553,6 +559,7 @@ export default function HaikuDetail() {
                             src={reply.avatar_url}
                             name={reply.author}
                             size={28}
+                            frame={avatarFrames[reply.user_id]}
                           />
                         )}
                         <span style={{ color: 'var(--foreground)', fontSize: '0.9rem', fontWeight: 'bold' }}>

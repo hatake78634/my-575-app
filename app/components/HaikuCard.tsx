@@ -48,6 +48,8 @@ type HaikuCardProps = {
 
   // 今ログインしているユーザー
   currentUserId?: string | null
+
+  avatarFrame?: string | null
 }
 
 export default function HaikuCard({
@@ -56,6 +58,7 @@ export default function HaikuCard({
   likeCount,
   onLike,
   currentUserId,
+  avatarFrame,
 }: HaikuCardProps) {
   const router = useRouter()
 
@@ -370,6 +373,8 @@ export default function HaikuCard({
             }
 
             size={40}
+
+            frame={avatarFrame}
 
             onClick={
               openUser

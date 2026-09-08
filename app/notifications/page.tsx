@@ -21,6 +21,7 @@ import Avatar from '../components/Avatar'
 import {
   useAuth,
 } from '../hooks/useAuth'
+import { useAvatarFrames } from '../hooks/useAvatarFrames'
 
 
 type NotificationType =
@@ -107,6 +108,10 @@ export default function NotificationsPage() {
     setNotifications,
   ] =
     useState<NotificationRow[]>([])
+
+  const avatarFrames = useAvatarFrames(
+    notifications.map((item) => item.actor_user_id)
+  )
 
   const [
     loading,
@@ -889,6 +894,12 @@ export default function NotificationsPage() {
                     item
                   }
 
+                  avatarFrame={
+                    item.actor_user_id
+                      ? avatarFrames[item.actor_user_id]
+                      : null
+                  }
+
                   text={
                     getNotificationText(
                       item
@@ -1016,6 +1027,7 @@ function TabButton({
 
 function NotificationCard({
   item,
+  avatarFrame,
   text,
   dateText,
   processing,
@@ -1025,6 +1037,9 @@ function NotificationCard({
 }: {
   item:
     NotificationRow
+
+  avatarFrame:
+    string | null | undefined
 
   text:
     string
@@ -1137,6 +1152,8 @@ function NotificationCard({
             name={item.actor_username}
 
             size={42}
+
+            frame={avatarFrame}
           />
         ) : (
           <span>

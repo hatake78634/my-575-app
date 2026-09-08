@@ -19,6 +19,7 @@ import HaikuCard, {
   Haiku,
 } from '../components/HaikuCard'
 import { useAuth } from '../hooks/useAuth'
+import { useAvatarFrames } from '../hooks/useAvatarFrames'
 
 type SearchTab =
   | 'haiku'
@@ -1443,6 +1444,10 @@ function HaikuResults({
   userLikes,
   onLike,
 }: HaikuResultsProps) {
+  const avatarFrames = useAvatarFrames(
+    haikus.map((haiku) => haiku.user_id)
+  )
+
   if (
     haikus.length === 0
   ) {
@@ -1478,6 +1483,11 @@ function HaikuResults({
             onLike={
               onLike
             }
+            avatarFrame={
+              haiku.user_id
+                ? avatarFrames[haiku.user_id]
+                : null
+            }
           />
         )
       )}
@@ -1500,6 +1510,10 @@ function UserResults({
   users,
   onOpen,
 }: UserResultsProps) {
+  const avatarFrames = useAvatarFrames(
+    users.map((user) => user.id)
+  )
+
   if (
     users.length === 0
   ) {
@@ -1556,6 +1570,7 @@ function UserResults({
                 }
                 name={user.username}
                 size={46}
+                frame={avatarFrames[user.id]}
               />
             ) : (
               <div

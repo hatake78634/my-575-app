@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
+import { useAvatarFrames } from '../hooks/useAvatarFrames'
 import { supabase } from '@/lib/supabase'
 import Avatar from '../components/Avatar'
 import { AppShell, Button, EmptyState, ErrorState, Field, LoadingState, Surface, Tabs } from '../components/ui'
@@ -35,6 +36,7 @@ export default function FollowingPage() {
   const [activeTab, setActiveTab] = useState<RelationshipTab>('following')
   const [query, setQuery] = useState('')
   const [profiles, setProfiles] = useState<RelationshipProfile[]>([])
+  const avatarFrames = useAvatarFrames(profiles.map((profile) => profile.id))
   const [loadedKey, setLoadedKey] = useState<string | null>(null)
   const [errorText, setErrorText] = useState('')
   const requestIdRef = useRef(0)
@@ -184,7 +186,7 @@ export default function FollowingPage() {
                 className="ui-surface"
                 style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, color: 'inherit', textDecoration: 'none' }}
               >
-                <Avatar src={profile.avatar_url} name={profile.username} size={48} />
+                <Avatar src={profile.avatar_url} name={profile.username} size={48} frame={avatarFrames[profile.id]} />
                 <div style={{ minWidth: 0 }}>
                   <strong>{profile.username || '名無しの歌人'}</strong>
                   {profile.bio && <p className="ui-muted" style={{ margin: '4px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{profile.bio}</p>}
