@@ -1134,43 +1134,29 @@ export default function UserPage() {
             >
               {/* アイコン */}
 
-              {profile?.avatar_url ? (
-                <Avatar
-                  src={
-                    profile.avatar_url
-                  }
+              <Avatar
+                src={
+                  profile?.avatar_url
+                }
 
-                  name={
-                    profile.username ??
-                    '歌人'
-                  }
+                name={
+                  profile?.username ??
+                  '歌人'
+                }
 
-                  size={80}
+                size={80}
 
-                  frame={avatarFrames[profile.id]}
+                frame={
+                  profile?.id
+                    ? avatarFrames[profile.id]
+                    : null
+                }
 
-                  style={{
-                    border:
-                      '2px solid var(--border)',
-                  }}
-                />
-              ) : (
-                <div
-                  style={{
-                    width:
-                      '80px',
-
-                    height:
-                      '80px',
-
-                    borderRadius:
-                      '50%',
-
-                    backgroundColor:
-                      'var(--surface-elevated)',
-                  }}
-                />
-              )}
+                style={{
+                  border:
+                    '2px solid var(--border)',
+                }}
+              />
 
               {/* 名前・番付 */}
 
