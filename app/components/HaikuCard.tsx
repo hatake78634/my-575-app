@@ -361,70 +361,43 @@ export default function HaikuCard({
       >
         {/* アイコン */}
 
-        {haiku.avatar_url ? (
-          <Avatar
-            src={
-              haiku.avatar_url
-            }
+        <Avatar
+          src={
+            haiku.avatar_url
+          }
 
-            name={
-              haiku.author ||
-              '歌人'
-            }
+          name={
+            haiku.author ||
+            '歌人'
+          }
 
-            size={40}
+          size={40}
 
-            frame={avatarFrame}
+          frame={avatarFrame}
 
-            onClick={
-              openUser
-            }
+          onClick={
+            openUser
+          }
 
-            style={{
-              width:
-                '40px',
+          style={{
+            width:
+              '40px',
 
-              height:
-                '40px',
+            height:
+              '40px',
 
-              borderRadius:
-                '50%',
+            borderRadius:
+              '50%',
 
-              objectFit:
-                'cover',
+            objectFit:
+              'cover',
 
-              cursor:
-                haiku.user_id
-                  ? 'pointer'
-                  : 'default',
-            }}
-          />
-        ) : (
-          <div
-            onClick={
-              openUser
-            }
-
-            style={{
-              width:
-                '40px',
-
-              height:
-                '40px',
-
-              borderRadius:
-                '50%',
-
-              backgroundColor:
-                'var(--surface-elevated)',
-
-              cursor:
-                haiku.user_id
-                  ? 'pointer'
-                  : 'default',
-            }}
-          />
-        )}
+            cursor:
+              haiku.user_id
+                ? 'pointer'
+                : 'default',
+          }}
+        />
 
         {/* 名前・日時 */}
 
