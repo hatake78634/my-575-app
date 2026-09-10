@@ -52,8 +52,6 @@ type HaikuCardProps = {
   avatarFrame?: string | null
 }
 
-const DEBUG_AVATAR_USER_ID = 'bdb43d19-f1f2-45fd-a9ed-d51730deb427'
-
 export default function HaikuCard({
   haiku,
   isLiked,
@@ -63,13 +61,6 @@ export default function HaikuCard({
   avatarFrame,
 }: HaikuCardProps) {
   const router = useRouter()
-
-  if (haiku.user_id === DEBUG_AVATAR_USER_ID) {
-    console.log('[HaikuCard] avatar props', {
-      userId: haiku.user_id,
-      avatarFrame,
-    })
-  }
 
   const battleEndMs =
     haiku.battle_ends_at

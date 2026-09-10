@@ -53,8 +53,6 @@ type ScoredHaiku = {
   isNewPost: boolean
 }
 
-const DEBUG_AVATAR_USER_ID = 'bdb43d19-f1f2-45fd-a9ed-d51730deb427'
-
 type HaikuLoadResult = {
   requestId: number
   targetUserId: string | null
@@ -2317,19 +2315,8 @@ export default function Home() {
           }}
         >
           {list.map(
-            (haiku) => {
-              const avatarFrame = haiku.user_id
-                ? avatarFrames[haiku.user_id]
-                : null
-
-              if (haiku.user_id === DEBUG_AVATAR_USER_ID) {
-                console.log('[Home] HaikuCard avatarFrame', {
-                  userId: haiku.user_id,
-                  avatarFrame,
-                })
-              }
-
-              return <HaikuCard
+            (haiku) => (
+              <HaikuCard
                 key={
                   haiku.id
                 }
@@ -2360,9 +2347,13 @@ export default function Home() {
                   userId
                 }
 
-                avatarFrame={avatarFrame}
+                avatarFrame={
+                  haiku.user_id
+                    ? avatarFrames[haiku.user_id]
+                    : null
+                }
               />
-            }
+            )
           )}
         </div>
       )

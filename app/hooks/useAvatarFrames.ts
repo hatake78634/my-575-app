@@ -13,8 +13,6 @@ type AvatarFrameCatalogRow = {
   css_key: string
 }
 
-const DEBUG_AVATAR_USER_ID = 'bdb43d19-f1f2-45fd-a9ed-d51730deb427'
-
 export function useAvatarFrames(userIds: Array<string | null | undefined>) {
   const userIdsKey = Array.from(new Set(userIds.filter((userId): userId is string => Boolean(userId)))).sort().join(',')
   const [framesByUserId, setFramesByUserId] = useState<Record<string, string>>({})
@@ -39,14 +37,6 @@ export function useAvatarFrames(userIds: Array<string | null | undefined>) {
         .in('user_id', normalizedUserIds)
         .not('frame_id', 'is', null)
 
-      if (normalizedUserIds.includes(DEBUG_AVATAR_USER_ID)) {
-        console.log('[AvatarFrames] settings', {
-          normalizedUserIds,
-          settings: (settings as AvatarFrameSettingsRow[] ?? []).filter((setting) => setting.user_id === DEBUG_AVATAR_USER_ID),
-          settingsError,
-        })
-      }
-
       if (settingsError || !active) {
         if (active) setFramesByUserId({})
         return
@@ -64,13 +54,6 @@ export function useAvatarFrames(userIds: Array<string | null | undefined>) {
         .select('id,css_key')
         .in('id', frameIds)
 
-      if (normalizedUserIds.includes(DEBUG_AVATAR_USER_ID)) {
-        console.log('[AvatarFrames] catalog', {
-          catalog: (catalog as AvatarFrameCatalogRow[] ?? []).filter((frame) => frame.id === 'gold-ring'),
-          catalogError,
-        })
-      }
-
       if (catalogError || !active) {
         if (active) setFramesByUserId({})
         return
@@ -83,12 +66,6 @@ export function useAvatarFrames(userIds: Array<string | null | undefined>) {
           return cssKey ? [[setting.user_id, cssKey]] : []
         })
       )
-
-      if (normalizedUserIds.includes(DEBUG_AVATAR_USER_ID)) {
-        console.log('[AvatarFrames] nextFramesByUserId', {
-          [DEBUG_AVATAR_USER_ID]: nextFramesByUserId[DEBUG_AVATAR_USER_ID],
-        })
-      }
 
       if (active) setFramesByUserId(nextFramesByUserId)
     }
